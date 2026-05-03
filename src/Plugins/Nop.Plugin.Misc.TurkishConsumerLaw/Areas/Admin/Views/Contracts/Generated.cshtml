@@ -1,0 +1,97 @@
+@using Nop.Plugin.Misc.TurkishConsumerLaw.Areas.Admin.Models.Contracts
+@model GeneratedContractListModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewBag.PageTitle = "Üretilen Sözleşmeler";
+}
+
+<div class="content-header clearfix">
+    <h1 class="float-left">Üretilen Sözleşmeler</h1>
+    <div class="float-right">
+        <a asp-action="Templates" class="btn btn-default">
+            <i class="fas fa-arrow-left"></i> Şablonlara Dön
+        </a>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="card card-default">
+            <div class="card-header">
+                <i class="fas fa-search"></i> Filtreler
+            </div>
+            <div class="card-body">
+                <form method="get" class="form-inline">
+                    <label class="mr-2">Sipariş Id:</label>
+                    <input type="number" name="orderId" class="form-control mr-3" value="@Context.Request.Query["orderId"]" />
+                    <label class="mr-2">Müşteri Id:</label>
+                    <input type="number" name="customerId" class="form-control mr-3" value="@Context.Request.Query["customerId"]" />
+                    <button type="submit" class="btn btn-primary">Filtrele</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="card card-default">
+            <div class="card-body">
+                @if (Model.Items.Any())
+                {
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Tür</th>
+                                <th>Sipariş</th>
+                                <th>Müşteri</th>
+                                <th>Şablon Ver.</th>
+                                <th>Onay</th>
+                                <th>Üretim</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var c in Model.Items)
+                            {
+                                <tr>
+                                    <td>@c.Id</td>
+                                    <td>@c.TypeLabel</td>
+                                    <td>
+                                        <a asp-controller="Order" asp-action="Edit" asp-route-id="@c.OrderId">#@c.OrderId</a>
+                                    </td>
+                                    <td>
+                                        <a asp-controller="Customer" asp-action="Edit" asp-route-id="@c.CustomerId">#@c.CustomerId</a>
+                                    </td>
+                                    <td>v@c.TemplateVersion</td>
+                                    <td>
+                                        @if (c.Accepted)
+                                        {
+                                            <span class="badge badge-success" title="@c.AcceptedOnUtc?.ToString("dd.MM.yyyy HH:mm")">
+                                                <i class="fas fa-check"></i> Onaylandı
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-warning">Bekliyor</span>
+                                        }
+                                    </td>
+                                    <td>@c.CreatedOnUtc.ToString("dd.MM.yyyy HH:mm")</td>
+                                    <td>
+                                        <a asp-action="ViewGenerated" asp-route-id="@c.Id" target="_blank" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-eye"></i> Görüntüle
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="alert alert-info mb-0">
+                        Sipariş veya müşteri Id ile filtreleyerek üretilen sözleşmeleri listeleyebilirsiniz.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>

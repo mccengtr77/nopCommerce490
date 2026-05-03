@@ -1,0 +1,140 @@
+@using Nop.Plugin.Misc.TurkishConsumerLaw.Areas.Admin.Models.Kvkk
+@model KvkkTextsListModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewBag.PageTitle = "KVKK Metinleri";
+}
+
+<div class="content-header clearfix">
+    <h1 class="float-left">KVKK Metinleri</h1>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="alert alert-info">
+            <strong>2026/347 İlke Kararı:</strong> Aydınlatma metni ile açık rıza metni AYRI dökümanlardır.
+            Aydınlatma metni içinde "rıza veriyorum" ifadesi geçmemelidir.
+        </div>
+
+        @* AYDINLATMA METNİ — tek aktif metin *@
+        <form asp-controller="Kvkk" asp-action="Texts" method="post">
+            <div class="card card-default">
+                <div class="card-header">
+                    <i class="fas fa-file-alt"></i> Aydınlatma Metni (KVKK m.10)
+                </div>
+                <div class="card-body">
+                    @if (Model.Disclosure is not null)
+                    {
+                        <input type="hidden" asp-for="Disclosure.Id" />
+
+                        <div class="form-group row">
+                            <div class="col-md-3"><nop-label asp-for="Disclosure.Title" /></div>
+                            <div class="col-md-9"><nop-editor asp-for="Disclosure.Title" /></div>
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="col-md-3"><nop-label asp-for="Disclosure.Version" /></div>
+                            <div class="col-md-9">
+                                <nop-editor asp-for="Disclosure.Version" />
+                                <small class="text-muted">Metni değiştirdiğinizde versiyonu artırın → eski "okudum" beyanları geçersiz sayılır.</small>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="col-md-3"><nop-label asp-for="Disclosure.IsActive" /></div>
+                            <div class="col-md-9"><nop-editor asp-for="Disclosure.IsActive" /></div>
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="col-md-3"><nop-label asp-for="Disclosure.Content" /></div>
+                            <div class="col-md-9">
+                                <textarea asp-for="Disclosure.Content" rows="20" class="form-control"></textarea>
+                                <small class="text-muted">HTML kabul edilir. [ŞİRKET ADI], [ADRES] gibi placeholder'ları kendi bilgilerinizle değiştirin.</small>
+                            </div>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="alert alert-warning mb-0">
+                            Henüz aydınlatma metni yok. Plugin yeniden install edilerek default şablon yüklenir.
+                        </div>
+                    }
+                </div>
+                <div class="card-footer text-right">
+                    <button type="submit" name="save-disclosure" value="save-disclosure" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Aydınlatma Metnini Kaydet
+                    </button>
+                </div>
+            </div>
+        </form>
+
+        @* AÇIK RIZA METİNLERİ — kapsam başına bir satır *@
+        <div class="card card-default">
+            <div class="card-header">
+                <i class="fas fa-list"></i> Açık Rıza Metinleri (Kapsam Başına Ayrı)
+            </div>
+            <div class="card-body">
+                @if (Model.ExplicitConsents.Any())
+                {
+                    <table class="table table-hover">
+                        <thead>
+                            <tr>
+                                <th>Sıra</th>
+                                <th>Kapsam</th>
+                                <th>Etiket</th>
+                                <th>Versiyon</th>
+                                <th>Default</th>
+                                <th>Aktif</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var c in Model.ExplicitConsents)
+                            {
+                                var rowClass = c.Scope.ToString().StartsWith("Etk") ? "table-warning" : "";
+                                <tr class="@rowClass">
+                                    <td>@c.DisplayOrder</td>
+                                    <td><strong>@c.ScopeLabel</strong></td>
+                                    <td>@c.ShortLabel</td>
+                                    <td>v@c.Version</td>
+                                    <td>
+                                        @if (c.DefaultChecked)
+                                        {
+                                            <span class="badge badge-warning">Default İşaretli</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">Boş</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        @if (c.IsActive)
+                                        {
+                                            <span class="badge badge-success">Aktif</span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge badge-secondary">Pasif</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <a asp-action="EditConsent" asp-route-id="@c.Id" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-edit"></i> Düzenle
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="alert alert-warning mb-0">
+                        Henüz açık rıza metni tanımlı değil. Plugin install ile default 7 metin yüklenir.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+</section>

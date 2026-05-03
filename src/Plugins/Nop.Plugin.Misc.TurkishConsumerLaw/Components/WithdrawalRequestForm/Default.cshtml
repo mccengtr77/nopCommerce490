@@ -1,0 +1,106 @@
+@using Nop.Plugin.Misc.TurkishConsumerLaw.Components.WithdrawalRequestForm
+@model WithdrawalRequestFormModel
+
+<div class="tcl-withdrawal-form-wrapper">
+    <h4>14 Gün Cayma Hakkı</h4>
+
+    <p class="text-muted">
+        6502 sayılı Tüketici Kanunu ve Mesafeli Sözleşmeler Yönetmeliği kapsamında,
+        teslim aldığınız tarihten itibaren <strong>14 gün</strong> içinde gerekçe göstermeden
+        cayma hakkınızı kullanabilirsiniz. <strong>İade kargo ücretini satıcı öder.</strong>
+    </p>
+
+    @if (Model.ExistingRequestId is not null)
+    {
+        <div class="alert alert-info">
+            Bu sipariş için cayma talebiniz: <strong>#@Model.ExistingRequestId</strong>
+            — Durum: <strong>@Model.ExistingStatus</strong>
+        </div>
+    }
+
+    @if (!Model.IsEligible)
+    {
+        <div class="alert alert-warning">
+            <i class="fa fa-exclamation-triangle"></i>
+            @Model.Reason
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-success">
+            Cayma süresi içerisindesiniz. Son tarih: <strong>@Model.DeadlineUtc?.ToString("dd.MM.yyyy")</strong>
+            (kalan: <strong>@Model.DaysRemaining gün</strong>)
+        </div>
+
+        <form id="tcl-withdrawal-form" novalidate>
+            <input type="hidden" name="OrderId" value="@Model.OrderId" />
+
+            <div class="form-group">
+                <label for="tcl-withdrawal-reason">Cayma Nedeni (opsiyonel)</label>
+                <select id="tcl-withdrawal-reason" name="Reason" class="form-control">
+                    @foreach (var r in Model.Reasons)
+                    {
+                        <option value="@r.Value">@r.Label</option>
+                    }
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="tcl-withdrawal-desc">Açıklama <span class="text-danger">*</span></label>
+                <textarea id="tcl-withdrawal-desc" name="Description" class="form-control"
+                          rows="4" required minlength="10" maxlength="2000"></textarea>
+                <small class="text-muted">İade etmek istediğiniz ürünler ve detayları yazın (en az 10 karakter).</small>
+            </div>
+
+            <div id="tcl-withdrawal-message" class="alert" hidden></div>
+
+            <button type="submit" class="btn btn-primary">
+                Cayma Talebimi Gönder
+            </button>
+        </form>
+    }
+</div>
+
+<script asp-location="Footer">
+    (function () {
+        var form = document.getElementById('tcl-withdrawal-form');
+        if (!form) return;
+
+        var msgBox = document.getElementById('tcl-withdrawal-message');
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            msgBox.hidden = true;
+
+            var payload = {
+                OrderId: parseInt(form.OrderId.value, 10),
+                Reason: parseInt(form.Reason.value, 10),
+                Description: form.Description.value
+            };
+
+            fetch('/Plugins/TurkishConsumerLaw/api/withdrawal', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                msgBox.hidden = false;
+                if (data.success) {
+                    msgBox.className = 'alert alert-success';
+                    msgBox.textContent = 'Cayma talebiniz alındı (#' + data.requestId + '). En kısa sürede size geri dönülecek.';
+                    form.querySelector('button[type="submit"]').disabled = true;
+                } else {
+                    msgBox.className = 'alert alert-danger';
+                    msgBox.textContent = data.error || 'Talep gönderilemedi.';
+                }
+            })
+            .catch(function () {
+                msgBox.hidden = false;
+                msgBox.className = 'alert alert-danger';
+                msgBox.textContent = 'Sunucu hatası. Lütfen tekrar deneyin.';
+            });
+        });
+    })();
+</script>

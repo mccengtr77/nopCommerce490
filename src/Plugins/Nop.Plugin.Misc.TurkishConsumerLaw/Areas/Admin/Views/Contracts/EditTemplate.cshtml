@@ -1,0 +1,88 @@
+@using Nop.Plugin.Misc.TurkishConsumerLaw.Areas.Admin.Models.Contracts
+@using Nop.Plugin.Misc.TurkishConsumerLaw.Domain.Contracts
+@model ContractTemplateEditModel
+
+@{
+    Layout = "_AdminLayout";
+    var isNew = Model.Id == 0;
+    ViewBag.PageTitle = isNew ? "Yeni Sözleşme Şablonu" : $"Şablon: {Model.Name}";
+}
+
+<div class="content-header clearfix">
+    <h1 class="float-left">@ViewBag.PageTitle</h1>
+    <div class="float-right">
+        <a asp-action="Templates" class="btn btn-default">
+            <i class="fas fa-arrow-left"></i> Listeye Dön
+        </a>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="alert alert-info">
+            <strong>Kullanılabilir Token'lar:</strong>
+            <code>{{SatıcıAdı}}</code>, <code>{{SatıcıAdresi}}</code>, <code>{{SatıcıTelefon}}</code>,
+            <code>{{SatıcıKep}}</code>, <code>{{SatıcıMersis}}</code>,
+            <code>{{AlıcıAdı}}</code>, <code>{{AlıcıAdresi}}</code>, <code>{{AlıcıTelefon}}</code>,
+            <code>{{AlıcıTcKimlik}}</code>, <code>{{AlıcıVergiNo}}</code>,
+            <code>{{SiparişNo}}</code>, <code>{{SiparişTarihi}}</code>,
+            <code>{{ÜrünListesi}}</code>,
+            <code>{{AraToplam}}</code>, <code>{{KdvToplam}}</code>, <code>{{KargoBedeli}}</code>,
+            <code>{{İndirim}}</code>, <code>{{GenelToplam}}</code>,
+            <code>{{TeslimatAdresi}}</code>, <code>{{FaturaAdresi}}</code>,
+            <code>{{ÖdemeYöntemi}}</code>, <code>{{KargoFirması}}</code>, <code>{{TahminiTeslimSüresi}}</code>,
+            <code>{{CaymaSüresi}}</code>, <code>{{ArabuluculukBilgisi}}</code>
+        </div>
+
+        <form asp-action="@(isNew ? "CreateTemplate" : "EditTemplate")" method="post">
+            <input type="hidden" asp-for="Id" />
+
+            <div class="card card-default">
+                <div class="card-body">
+
+                    <div class="form-group row">
+                        <div class="col-md-3"><nop-label asp-for="Type" /></div>
+                        <div class="col-md-9">
+                            <select asp-for="Type" asp-items="@Html.GetEnumSelectList<ContractTemplateType>()" class="form-control"></select>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="col-md-3"><nop-label asp-for="Name" /></div>
+                        <div class="col-md-9"><nop-editor asp-for="Name" /></div>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="col-md-3"><nop-label asp-for="Version" /></div>
+                        <div class="col-md-9">
+                            <nop-editor asp-for="Version" />
+                            <small class="text-muted">Şablonu değiştirdiğinizde versiyonu artırın.</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="col-md-3"><nop-label asp-for="DisplayOrder" /></div>
+                        <div class="col-md-9"><nop-editor asp-for="DisplayOrder" /></div>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="col-md-3"><nop-label asp-for="IsActive" /></div>
+                        <div class="col-md-9"><nop-editor asp-for="IsActive" /></div>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="col-md-3"><nop-label asp-for="HtmlContent" /></div>
+                        <div class="col-md-9">
+                            <textarea asp-for="HtmlContent" rows="25" class="form-control" style="font-family: monospace;"></textarea>
+                        </div>
+                    </div>
+                </div>
+                <div class="card-footer text-right">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Kaydet
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>

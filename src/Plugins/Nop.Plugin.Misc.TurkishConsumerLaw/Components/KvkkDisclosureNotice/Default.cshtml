@@ -1,0 +1,41 @@
+@using Nop.Plugin.Misc.TurkishConsumerLaw.Components.KvkkDisclosureNotice
+@model KvkkDisclosureNoticeModel
+
+@*
+    KVKK aydınlatma metni. 2026/347 İlke Kararı:
+    Bu bölümde "rıza" sözcüğü geçmemeli; sadece "okudum" beyanı.
+    Açık rıza onayları AYRI ExplicitConsentCheckboxes ViewComponent'inde.
+*@
+<div class="tcl-kvkk-disclosure" data-version="@Model.Version">
+    <details>
+        <summary>
+            <strong>KVKK Aydınlatma Metni</strong>
+            <span class="tcl-disclosure-version">v@Model.Version</span>
+        </summary>
+        <div class="tcl-disclosure-content">
+            @Html.Raw(Model.HtmlContent)
+        </div>
+    </details>
+
+    @if (Model.ReadAcknowledgmentRequired)
+    {
+        <div class="form-group tcl-disclosure-ack">
+            <label>
+                <input type="checkbox" id="tcl-disclosure-read" name="tcl-disclosure-read"
+                       data-version="@Model.Version" required />
+                Aydınlatma metnini <strong>okudum ve anladım</strong>.
+            </label>
+            <small class="text-muted d-block">
+                Bu kutucuk yalnızca okuma beyanıdır — açık rıza onayları aşağıda ayrı bölümde alınır.
+            </small>
+        </div>
+    }
+</div>
+
+<style>
+    .tcl-kvkk-disclosure { margin: 12px 0; }
+    .tcl-kvkk-disclosure summary { cursor: pointer; padding: 8px; background: #f5f5f5; border-radius: 4px; }
+    .tcl-disclosure-version { font-size: 0.8em; color: #888; margin-left: 8px; font-weight: normal; }
+    .tcl-disclosure-content { margin-top: 8px; padding: 12px; font-size: 0.95em; max-height: 400px; overflow-y: auto; border: 1px solid #e5e5e5; border-radius: 4px; }
+    .tcl-disclosure-ack { margin-top: 12px; padding: 8px 12px; background: #f9f9f9; border-left: 3px solid #4CAF50; border-radius: 0 4px 4px 0; }
+</style>

@@ -1,0 +1,12 @@
+{
+  "Group": "Misc",
+  "FriendlyName": "Türkiye Core - Türkiye E-Ticaret Çekirdek Modülü",
+  "SystemName": "Misc.TurkeyCore",
+  "Version": "1.0.1",
+  "SupportedVersions": [ "4.90" ],
+  "Author": "Mehmet ÇALIŞKAN",
+  "DisplayOrder": 1,
+  "FileName": "Nop.Plugin.Misc.TurkeyCore.dll",
+  "Description": "nopCommerce için Türkiye lokalizasyon temel paketi: TC Kimlik/Vergi No validasyonu, il/ilçe/mahalle veri seti, vergi daireleri, KDV oranları, TCMB döviz kuru, GİB mükellef sorgu, Türkçe yerelleştirme.",
+  "Dependencies": []
+}

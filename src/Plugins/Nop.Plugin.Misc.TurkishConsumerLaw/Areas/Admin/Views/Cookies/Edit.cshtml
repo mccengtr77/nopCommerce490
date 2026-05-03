@@ -1,0 +1,91 @@
+@using Nop.Plugin.Misc.TurkishConsumerLaw.Areas.Admin.Models.Cookies
+@using Nop.Plugin.Misc.TurkishConsumerLaw.Domain.Cookies
+@model CookieDefinitionEditModel
+
+@{
+    Layout = "_AdminLayout";
+    var isNew = Model.Id == 0;
+    ViewBag.PageTitle = isNew ? "Yeni Çerez Tanımı" : $"Çerez: {Model.Name}";
+}
+
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        @ViewBag.PageTitle
+    </h1>
+    <div class="float-right">
+        <a asp-action="List" class="btn btn-default">
+            <i class="fas fa-arrow-left"></i> Listeye Dön
+        </a>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <form asp-action="@(isNew ? "Create" : "Edit")" method="post">
+            <input type="hidden" asp-for="Id" />
+
+            <div class="card card-default">
+                <div class="card-body">
+
+                    <div class="form-group row">
+                        <div class="col-md-3"><nop-label asp-for="Name" /></div>
+                        <div class="col-md-9">
+                            <nop-editor asp-for="Name" />
+                            <small class="text-muted">Teknik çerez adı (örn. <code>_ga</code>, <code>ASP.NET_SessionId</code>)</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="col-md-3"><nop-label asp-for="Provider" /></div>
+                        <div class="col-md-9">
+                            <nop-editor asp-for="Provider" />
+                            <small class="text-muted">örn. "Google Analytics", "Site içi"</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="col-md-3"><nop-label asp-for="Category" /></div>
+                        <div class="col-md-9">
+                            <select asp-for="Category" asp-items="@Html.GetEnumSelectList<CookieCategory>()" class="form-control"></select>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="col-md-3"><nop-label asp-for="Purpose" /></div>
+                        <div class="col-md-9">
+                            <textarea asp-for="Purpose" rows="3" class="form-control"></textarea>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="col-md-3"><nop-label asp-for="Duration" /></div>
+                        <div class="col-md-9">
+                            <nop-editor asp-for="Duration" />
+                            <small class="text-muted">İnsan okur metin: "Oturum sonu", "30 gün", "2 yıl"</small>
+                        </div>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="col-md-3"><nop-label asp-for="IsThirdParty" /></div>
+                        <div class="col-md-9"><nop-editor asp-for="IsThirdParty" /></div>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="col-md-3"><nop-label asp-for="DisplayOrder" /></div>
+                        <div class="col-md-9"><nop-editor asp-for="DisplayOrder" /></div>
+                    </div>
+
+                    <div class="form-group row">
+                        <div class="col-md-3"><nop-label asp-for="IsActive" /></div>
+                        <div class="col-md-9"><nop-editor asp-for="IsActive" /></div>
+                    </div>
+                </div>
+                <div class="card-footer text-right">
+                    <button type="submit" class="btn btn-primary">
+                        <i class="fas fa-save"></i> Kaydet
+                    </button>
+                </div>
+            </div>
+        </form>
+    </div>
+</section>

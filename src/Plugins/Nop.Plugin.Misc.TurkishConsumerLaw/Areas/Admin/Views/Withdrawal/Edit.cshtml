@@ -1,0 +1,190 @@
+@using Nop.Plugin.Misc.TurkishConsumerLaw.Areas.Admin.Models.Withdrawal
+@using Nop.Plugin.Misc.TurkishConsumerLaw.Domain.Withdrawal
+@model WithdrawalDetailModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewBag.PageTitle = $"Cayma #{Model.Id}";
+}
+
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        Cayma Talebi #@Model.Id
+        <small> — Sipariş <a asp-controller="Order" asp-action="Edit" asp-route-id="@Model.OrderId">#@Model.OrderId</a></small>
+    </h1>
+    <div class="float-right">
+        <a asp-action="List" class="btn btn-default">
+            <i class="fas fa-arrow-left"></i> Listeye Dön
+        </a>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+
+        <div class="alert alert-info">
+            <strong>Mevcut Durum:</strong> @Model.StatusLabel
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="card card-default">
+                    <div class="card-header"><i class="fas fa-info-circle"></i> Talep Bilgisi</div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-4">Müşteri</dt>
+                            <dd class="col-sm-8"><a asp-controller="Customer" asp-action="Edit" asp-route-id="@Model.CustomerId">#@Model.CustomerId</a></dd>
+
+                            <dt class="col-sm-4">Sebep</dt>
+                            <dd class="col-sm-8">@Model.ReasonLabel</dd>
+
+                            <dt class="col-sm-4">Talep Zamanı</dt>
+                            <dd class="col-sm-8">@Model.SubmittedOnUtc.ToString("dd.MM.yyyy HH:mm")</dd>
+
+                            <dt class="col-sm-4">IP</dt>
+                            <dd class="col-sm-8"><small>@Model.IpAddress</small></dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-6">
+                <div class="card card-default">
+                    <div class="card-header"><i class="fas fa-history"></i> Süreç Geçmişi</div>
+                    <div class="card-body">
+                        <dl class="row mb-0">
+                            <dt class="col-sm-5">Onay</dt>
+                            <dd class="col-sm-7">@(Model.ApprovedOnUtc?.ToString("dd.MM.yyyy HH:mm") ?? "—")</dd>
+
+                            <dt class="col-sm-5">Kargo No</dt>
+                            <dd class="col-sm-7">@(Model.ReturnTrackingNumber ?? "—")</dd>
+
+                            <dt class="col-sm-5">Ürün Ulaştı</dt>
+                            <dd class="col-sm-7">@(Model.ReceivedOnUtc?.ToString("dd.MM.yyyy HH:mm") ?? "—")</dd>
+
+                            <dt class="col-sm-5">Refund</dt>
+                            <dd class="col-sm-7">
+                                @if (Model.RefundedOnUtc != null)
+                                {
+                                    <span>@Model.RefundAmount?.ToString("N2") ₺ — @Model.RefundedOnUtc?.ToString("dd.MM.yyyy")</span>
+                                }
+                                else
+                                {
+                                    <span>—</span>
+                                }
+                            </dd>
+
+                            <dt class="col-sm-5">Tamamlandı</dt>
+                            <dd class="col-sm-7">@(Model.CompletedOnUtc?.ToString("dd.MM.yyyy HH:mm") ?? "—")</dd>
+                        </dl>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card card-default">
+            <div class="card-header"><i class="fas fa-comment"></i> Müşteri Açıklaması</div>
+            <div class="card-body">
+                <p style="white-space: pre-wrap;">@Model.Description</p>
+            </div>
+        </div>
+
+        @if (!string.IsNullOrEmpty(Model.RejectionReason))
+        {
+            <div class="card card-default">
+                <div class="card-header text-danger"><i class="fas fa-times"></i> Red Gerekçesi</div>
+                <div class="card-body">
+                    <p style="white-space: pre-wrap;">@Model.RejectionReason</p>
+                </div>
+            </div>
+        }
+
+        @if (!string.IsNullOrEmpty(Model.InspectionNotes))
+        {
+            <div class="card card-default">
+                <div class="card-header"><i class="fas fa-clipboard-check"></i> İnceleme Notları</div>
+                <div class="card-body">
+                    <p style="white-space: pre-wrap;">@Model.InspectionNotes</p>
+                </div>
+            </div>
+        }
+
+        @* STATE MACHINE AKSIYONLARI *@
+        <div class="card card-default">
+            <div class="card-header"><i class="fas fa-cogs"></i> İşlem</div>
+            <div class="card-body">
+
+                @if (Model.Status == WithdrawalStatus.Pending)
+                {
+                    <div class="alert alert-warning">Bu talep onay bekliyor. Onay veya red kararını verin:</div>
+
+                    <div class="row">
+                        <div class="col-md-6">
+                            <form asp-action="Approve" asp-route-id="@Model.Id" method="post">
+                                <button type="submit" class="btn btn-success btn-block">
+                                    <i class="fas fa-check"></i> Onayla
+                                </button>
+                            </form>
+                        </div>
+                        <div class="col-md-6">
+                            <form asp-action="Reject" method="post">
+                                <input type="hidden" name="Id" value="@Model.Id" />
+                                <div class="form-group">
+                                    <textarea name="RejectionReason" class="form-control" rows="3"
+                                              placeholder="Red gerekçesi yazın..." required></textarea>
+                                </div>
+                                <button type="submit" class="btn btn-danger btn-block">
+                                    <i class="fas fa-times"></i> Reddet
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                }
+                else if (Model.AvailableNextStates.Any())
+                {
+                    <p>Mevcut durumdan ilerletilebilir:</p>
+                    @foreach (var nextState in Model.AvailableNextStates)
+                    {
+                        <form asp-action="Advance" method="post" class="mb-3 p-2 border rounded">
+                            <input type="hidden" name="Id" value="@Model.Id" />
+                            <input type="hidden" name="NewStatus" value="@nextState" />
+
+                            <h5>@nextState olarak işaretle</h5>
+
+                            @if (nextState == WithdrawalStatus.InTransit)
+                            {
+                                <div class="form-group">
+                                    <label>Kargo Takip No:</label>
+                                    <input type="text" name="Note" class="form-control" placeholder="örn. ARAS123456789" />
+                                </div>
+                            }
+                            else if (nextState == WithdrawalStatus.Inspected)
+                            {
+                                <div class="form-group">
+                                    <label>İnceleme Notları:</label>
+                                    <textarea name="Note" class="form-control" rows="2"
+                                              placeholder="Hasar, eksik parça, vb. notlar..."></textarea>
+                                </div>
+                            }
+                            else if (nextState == WithdrawalStatus.Refunded)
+                            {
+                                <div class="form-group">
+                                    <label>İade Tutarı (TRY):</label>
+                                    <input type="number" name="RefundAmount" step="0.01" class="form-control" required />
+                                </div>
+                            }
+
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-arrow-right"></i> @nextState
+                            </button>
+                        </form>
+                    }
+                }
+                else
+                {
+                    <div class="alert alert-secondary mb-0">Bu durumda yapılabilecek bir işlem yok (terminal state).</div>
+                }
+            </div>
+        </div>
+    </div>
+</section>

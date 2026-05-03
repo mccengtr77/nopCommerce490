@@ -1,0 +1,55 @@
+@using Nop.Plugin.Misc.TurkishConsumerLaw.Components.ExplicitConsentCheckboxes
+@model ExplicitConsentCheckboxesModel
+
+@*
+    Açık rıza checkbox'ları. Her bir checkbox AYRI bir <see cref="ConsentScope"/>'a bağlanır.
+    Form alanı adı: tcl-consent-{scope} (kayıt formundan POST edilirken).
+    AJAX ile /Plugins/TurkishConsumerLaw/api/kvkk-consent endpoint'ine batch olarak gönderilir.
+
+    2026/347 İlke Kararı uyumu:
+    - Birden fazla scope ayrı checkbox
+    - Default işaretsiz (DefaultChecked = false)
+    - "Tümünü kabul et" tek tıkla rıza alma yok
+*@
+<fieldset class="tcl-explicit-consents tcl-mode-@Model.Mode">
+    <legend>@Model.Title</legend>
+
+    @foreach (var item in Model.Items)
+    {
+        var fieldId = $"tcl-consent-{(int)item.Scope}";
+        <div class="tcl-consent-item form-group">
+            <label class="tcl-consent-label">
+                <input type="checkbox"
+                       id="@fieldId"
+                       name="tcl-consent"
+                       value="@((int)item.Scope)"
+                       data-scope="@((int)item.Scope)"
+                       data-version="@item.Version"
+                       checked="@item.DefaultChecked" />
+                <span>@item.ShortLabel</span>
+            </label>
+
+            @if (!string.IsNullOrWhiteSpace(item.Content))
+            {
+                <details class="tcl-consent-details">
+                    <summary>Detay</summary>
+                    <div class="tcl-consent-content">
+                        @Html.Raw(item.Content)
+                    </div>
+                </details>
+            }
+        </div>
+    }
+</fieldset>
+
+<style>
+    .tcl-explicit-consents { margin: 12px 0; padding: 12px; border: 1px solid #e5e5e5; border-radius: 4px; }
+    .tcl-explicit-consents legend { font-weight: 600; padding: 0 8px; font-size: 1em; }
+    .tcl-consent-item { margin: 8px 0; }
+    .tcl-consent-label { display: flex; align-items: flex-start; gap: 6px; cursor: pointer; }
+    .tcl-consent-label input[type="checkbox"] { margin-top: 4px; flex-shrink: 0; }
+    .tcl-consent-details { margin-top: 4px; margin-left: 24px; }
+    .tcl-consent-details summary { cursor: pointer; font-size: 0.85em; color: #555; }
+    .tcl-consent-content { margin-top: 6px; padding: 8px; font-size: 0.9em; background: #fafafa; border-left: 3px solid #ddd; }
+    .tcl-mode-etk { background: #fff8e1; border-color: #ffd54f; }
+</style>

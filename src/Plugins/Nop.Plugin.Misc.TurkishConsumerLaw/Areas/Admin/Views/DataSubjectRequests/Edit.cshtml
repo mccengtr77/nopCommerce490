@@ -1,0 +1,161 @@
+@using Nop.Plugin.Misc.TurkishConsumerLaw.Areas.Admin.Models.DataSubjectRequests
+@using Nop.Plugin.Misc.TurkishConsumerLaw.Domain.DataSubjectRequests
+@model DataSubjectRequestDetailModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewBag.PageTitle = $"DSR #{Model.Id} — {Model.FullName}";
+}
+
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        Başvuru #@Model.Id
+        <small> — @Model.FullName</small>
+    </h1>
+    <div class="float-right">
+        <a asp-action="List" class="btn btn-default">
+            <i class="fas fa-arrow-left"></i> Listeye Dön
+        </a>
+    </div>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+
+            @if (Model.RespondedOnUtc == null && Model.DaysToDeadline < 0)
+            {
+                <div class="alert alert-danger">
+                    <strong>Süre aşımı!</strong> Bu başvuru @Math.Abs(Model.DaysToDeadline) gündür yanıtsız.
+                    KVKK m.13/(2) gereği 30 gün içinde yanıt vermeniz gerekirdi.
+                </div>
+            }
+            else if (Model.RespondedOnUtc == null && Model.DaysToDeadline <= 7)
+            {
+                <div class="alert alert-warning">
+                    Yanıt için kalan: <strong>@Model.DaysToDeadline gün</strong>
+                </div>
+            }
+
+            <div class="row">
+                <div class="col-md-6">
+                    <div class="card card-default">
+                        <div class="card-header">
+                            <i class="fas fa-user"></i> Başvuru Sahibi
+                        </div>
+                        <div class="card-body">
+                            <dl class="row mb-0">
+                                <dt class="col-sm-4">Ad Soyad</dt>
+                                <dd class="col-sm-8">@Model.FullName</dd>
+
+                                <dt class="col-sm-4">E-posta</dt>
+                                <dd class="col-sm-8"><a href="mailto:@Model.Email">@Model.Email</a></dd>
+
+                                @if (!string.IsNullOrEmpty(Model.Phone))
+                                {
+                                    <dt class="col-sm-4">Telefon</dt>
+                                    <dd class="col-sm-8">@Model.Phone</dd>
+                                }
+
+                                <dt class="col-sm-4">Müşteri Id</dt>
+                                <dd class="col-sm-8">
+                                    @if (Model.CustomerId > 0)
+                                    {
+                                        <a asp-controller="Customer" asp-action="Edit" asp-route-id="@Model.CustomerId">@Model.CustomerId</a>
+                                    }
+                                    else
+                                    {
+                                        <em class="text-muted">Anonim</em>
+                                    }
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-6">
+                    <div class="card card-default">
+                        <div class="card-header">
+                            <i class="fas fa-info-circle"></i> Başvuru Bilgisi
+                        </div>
+                        <div class="card-body">
+                            <dl class="row mb-0">
+                                <dt class="col-sm-4">Türü</dt>
+                                <dd class="col-sm-8">@Model.RequestTypeLabel</dd>
+
+                                <dt class="col-sm-4">Başvuru</dt>
+                                <dd class="col-sm-8">@Model.SubmittedOnUtc.ToString("dd.MM.yyyy HH:mm") UTC</dd>
+
+                                <dt class="col-sm-4">Deadline</dt>
+                                <dd class="col-sm-8">@Model.DeadlineUtc.ToString("dd.MM.yyyy")</dd>
+
+                                <dt class="col-sm-4">IP / UA</dt>
+                                <dd class="col-sm-8">
+                                    <small class="text-muted">@Model.IpAddress<br />@Model.UserAgent</small>
+                                </dd>
+                            </dl>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-default">
+                <div class="card-header">
+                    <i class="fas fa-comment"></i> Talep Açıklaması
+                </div>
+                <div class="card-body">
+                    <p style="white-space: pre-wrap;">@Model.Description</p>
+                </div>
+            </div>
+
+            <form asp-action="Edit" method="post">
+                <input type="hidden" asp-for="Id" />
+
+                <div class="card card-default">
+                    <div class="card-header">
+                        <i class="fas fa-reply"></i> Yanıt
+                    </div>
+                    <div class="card-body">
+
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="Status" />
+                            </div>
+                            <div class="col-md-9">
+                                <select asp-for="Status" asp-items="@Html.GetEnumSelectList<DataSubjectRequestStatus>()" class="form-control">
+                                </select>
+                            </div>
+                        </div>
+
+                        <div class="form-group row">
+                            <div class="col-md-3">
+                                <nop-label asp-for="AdminResponse" />
+                            </div>
+                            <div class="col-md-9">
+                                <textarea asp-for="AdminResponse" rows="6" class="form-control"></textarea>
+                                <small class="text-muted">
+                                    Bu yanıt başvuru sahibinin e-postasına gönderilmez (otomatik bildirim henüz aktif değil).
+                                    Manuel olarak <strong>@Model.Email</strong> adresine yanıtlamayı unutmayın.
+                                </small>
+                            </div>
+                        </div>
+
+                        @if (Model.RespondedOnUtc != null)
+                        {
+                            <div class="alert alert-success mb-0">
+                                <i class="fas fa-check"></i>
+                                Yanıt tamamlandı: @Model.RespondedOnUtc.Value.ToString("dd.MM.yyyy HH:mm") UTC
+                            </div>
+                        }
+                    </div>
+                    <div class="card-footer text-right">
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Yanıtı Kaydet
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+        </div>
+    </div>
+</section>

@@ -1,0 +1,127 @@
+# Türkiye mahalle/posta kodu — büyük şehirlerden örnekler (~50.000+ mahalle var, PTT kaynağı için Data/Seed/README.md).
+# Format: ProvincePlateCode|DistrictName|NeighborhoodName|PostalCode
+# Posta kodu 5 hane.
+ProvincePlate|DistrictName|NeighborhoodName|PostalCode
+
+# === İSTANBUL — Beyoğlu (34) ===
+34|Beyoğlu|Asmalı Mescit|34430
+34|Beyoğlu|Bedrettin|34425
+34|Beyoğlu|Bostan|34425
+34|Beyoğlu|Bülbül|34435
+34|Beyoğlu|Camiikebir|34421
+34|Beyoğlu|Cihangir|34433
+34|Beyoğlu|Çatma Mescit|34430
+34|Beyoğlu|Çukur|34421
+34|Beyoğlu|Emekyemez|34421
+34|Beyoğlu|Evliya Çelebi|34430
+34|Beyoğlu|Fetihtepe|34440
+34|Beyoğlu|Firuzağa|34425
+34|Beyoğlu|Gümüşsuyu|34437
+34|Beyoğlu|Hacıahmet|34440
+34|Beyoğlu|Hacımimi|34421
+34|Beyoğlu|Halıcıoğlu|34440
+34|Beyoğlu|Hüseyinağa|34435
+34|Beyoğlu|İstiklal|34433
+34|Beyoğlu|Kadı Mehmet Efendi|34440
+34|Beyoğlu|Kalyoncukulluğu|34435
+34|Beyoğlu|Kamer Hatun|34435
+34|Beyoğlu|Kaptanpaşa|34440
+34|Beyoğlu|Katip Mustafa Çelebi|34433
+34|Beyoğlu|Keçeci Piri|34440
+34|Beyoğlu|Kemankeş Karamustafa Paşa|34425
+34|Beyoğlu|Küçük Piyale|34440
+34|Beyoğlu|Kılıçali Paşa|34433
+34|Beyoğlu|Müeyyetzade|34421
+34|Beyoğlu|Ömer Avni|34427
+34|Beyoğlu|Örnektepe|34440
+34|Beyoğlu|Piri Paşa|34440
+34|Beyoğlu|Pürtelaş Hasan Efendi|34433
+34|Beyoğlu|Sururi|34440
+34|Beyoğlu|Sütlüce|34445
+34|Beyoğlu|Şahkulu|34421
+34|Beyoğlu|Şehit Muhtar|34435
+34|Beyoğlu|Tomtom|34433
+34|Beyoğlu|Yahya Kahya|34440
+34|Beyoğlu|Yenişehir|34435
+
+# === İSTANBUL — Kadıköy (34) ===
+34|Kadıköy|Acıbadem|34718
+34|Kadıköy|Bostancı|34744
+34|Kadıköy|Caddebostan|34728
+34|Kadıköy|Caferağa|34710
+34|Kadıköy|Eğitim|34722
+34|Kadıköy|Erenköy|34738
+34|Kadıköy|Fenerbahçe|34726
+34|Kadıköy|Feneryolu|34724
+34|Kadıköy|Fikirtepe|34720
+34|Kadıköy|Göztepe|34730
+34|Kadıköy|Hasanpaşa|34722
+34|Kadıköy|Koşuyolu|34718
+34|Kadıköy|Kozyatağı|34742
+34|Kadıköy|Merdivenköy|34732
+34|Kadıköy|Osmanağa|34714
+34|Kadıköy|Rasimpaşa|34716
+34|Kadıköy|Sahrayıcedit|34734
+34|Kadıköy|Suadiye|34740
+34|Kadıköy|Zühtüpaşa|34724
+
+# === İSTANBUL — Beşiktaş (34) ===
+34|Beşiktaş|Abbasağa|34353
+34|Beşiktaş|Akat|34335
+34|Beşiktaş|Arnavutköy|34345
+34|Beşiktaş|Bebek|34342
+34|Beşiktaş|Cihannüma|34353
+34|Beşiktaş|Dikilitaş|34349
+34|Beşiktaş|Etiler|34337
+34|Beşiktaş|Gayrettepe|34349
+34|Beşiktaş|Konaklar|34337
+34|Beşiktaş|Kuruçeşme|34345
+34|Beşiktaş|Levazım|34340
+34|Beşiktaş|Levent|34330
+34|Beşiktaş|Mecidiye|34347
+34|Beşiktaş|Muradiye|34357
+34|Beşiktaş|Nisbetiye|34335
+34|Beşiktaş|Ortaköy|34347
+34|Beşiktaş|Sinanpaşa|34353
+34|Beşiktaş|Türkali|34357
+34|Beşiktaş|Ulus|34340
+34|Beşiktaş|Vişnezade|34357
+34|Beşiktaş|Yıldız|34349
+
+# === ANKARA — Çankaya (6) ===
+6|Çankaya|Ahlatlıbel|06824
+6|Çankaya|Akpınar|06570
+6|Çankaya|Aşağı Öveçler|06460
+6|Çankaya|Ayrancı|06550
+6|Çankaya|Bahçelievler|06490
+6|Çankaya|Beytepe|06800
+6|Çankaya|Birlik|06610
+6|Çankaya|Çankaya|06680
+6|Çankaya|Çukurambar|06530
+6|Çankaya|Dikmen|06450
+6|Çankaya|Emek|06490
+6|Çankaya|Esat|06660
+6|Çankaya|Karakusunlar|06530
+6|Çankaya|Kavaklıdere|06680
+6|Çankaya|Kızılay|06420
+6|Çankaya|Maltepe|06570
+6|Çankaya|Mustafa Kemal|06530
+6|Çankaya|Oran|06450
+6|Çankaya|Ümitköy|06800
+6|Çankaya|Yıldız|06550
+
+# === İZMİR — Konak (35) ===
+35|Konak|Akdeniz|35210
+35|Konak|Alsancak|35220
+35|Konak|Bahribaba|35230
+35|Konak|Çankaya|35260
+35|Konak|Eşrefpaşa|35280
+35|Konak|Güzelyalı|35330
+35|Konak|Kahramanlar|35260
+35|Konak|Kemeraltı|35250
+35|Konak|Konak|35250
+35|Konak|Mithatpaşa|35330
+35|Konak|Pasaport|35210
+35|Konak|Üçkuyular|35330
+
+# Tam ~50.000 mahalle için bkz. Data/Seed/README.md

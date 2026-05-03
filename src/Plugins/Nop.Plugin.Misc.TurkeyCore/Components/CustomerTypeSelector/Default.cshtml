@@ -1,0 +1,23 @@
+@using Nop.Plugin.Misc.TurkeyCore.Components.CustomerTypeSelector
+@using Nop.Plugin.Misc.TurkeyCore.Domain
+@model CustomerTypeSelectorModel
+
+<div class="form-group turkey-customer-type">
+    <label class="control-label">Müşteri Tipi</label>
+    <div>
+        <label class="radio-inline">
+            <input type="radio"
+                   name="@Model.FieldName"
+                   value="@((int)TurkishCustomerType.Individual)"
+                   checked="@(Model.Selected == TurkishCustomerType.Individual)" />
+            Bireysel
+        </label>
+        <label class="radio-inline ml-3">
+            <input type="radio"
+                   name="@Model.FieldName"
+                   value="@((int)TurkishCustomerType.Corporate)"
+                   checked="@(Model.Selected == TurkishCustomerType.Corporate)" />
+            Kurumsal
+        </label>
+    </div>
+</div>

@@ -1,0 +1,178 @@
+@using Nop.Plugin.Misc.TurkeyCore.Components.TurkishCustomerInvoice
+@using Nop.Plugin.Misc.TurkeyCore.Domain
+@model TurkishCustomerInvoiceModel
+
+@{
+    var prefix = string.IsNullOrEmpty(Model.FieldNamePrefix) ? string.Empty : Model.FieldNamePrefix + ".";
+    var tcknField = $"{prefix}TcKimlikNo";
+    var vknField = $"{prefix}VergiNo";
+    var vergiDairesiField = $"{prefix}VergiDairesiId";
+    var componentId = $"tc-inv-{Guid.NewGuid():N}";
+    var initialDisplay = Model.InitiallyHidden ? "none" : "";
+}
+
+<div class="turkey-customer-invoice"
+     id="@componentId"
+     data-turkey-country-id="@Model.TurkeyCountryId"
+     data-section="@Model.Section"
+     style="display:@initialDisplay">
+
+    @if (Model.ShowTckn)
+    {
+        <div class="inputs tc-bireysel-only">
+            <label for="@tcknField">TC Kimlik No:</label>
+            <input type="text"
+                   name="@tcknField"
+                   id="@tcknField"
+                   class="tc-digit-only"
+                   maxlength="11"
+                   inputmode="numeric"
+                   autocomplete="off"
+                   pattern="[0-9]{11}"
+                   placeholder="@(Model.HasExistingTcKimlikNo ? "*********** (mevcut, değiştirmek için yeni değer girin)" : "11 haneli TC Kimlik No")" />
+            <span class="tc-inv-hint" id="@tcknField-hint"></span>
+        </div>
+    }
+
+    @if (Model.ShowVergi)
+    {
+        <div class="inputs tc-kurumsal-only">
+            <label for="@vknField">Vergi Kimlik No:</label>
+            <input type="text"
+                   name="@vknField"
+                   id="@vknField"
+                   class="tc-digit-only"
+                   maxlength="10"
+                   inputmode="numeric"
+                   autocomplete="off"
+                   pattern="[0-9]{10}"
+                   placeholder="@(Model.HasExistingVergiNo ? "********** (mevcut, değiştirmek için yeni değer girin)" : "10 haneli Vergi Kimlik No")" />
+            <span class="tc-inv-hint" id="@vknField-hint"></span>
+        </div>
+
+        <div class="inputs tc-kurumsal-only">
+            <label for="@vergiDairesiField">Vergi Dairesi:</label>
+            <select name="@vergiDairesiField"
+                    id="@vergiDairesiField"
+                    class="tc-inv-vergi-dairesi"
+                    data-selected="@Model.SelectedVergiDairesiId">
+                <option value="">Önce il seçiniz</option>
+            </select>
+        </div>
+    }
+</div>
+
+<style>
+    .turkey-customer-invoice .tc-inv-hint {
+        display: block; font-size: 0.85em; margin-top: 4px;
+    }
+    .turkey-customer-invoice .tc-inv-hint.is-valid { color: #15803d; }
+    .turkey-customer-invoice .tc-inv-hint.is-invalid { color: #b91c1c; }
+</style>
+
+<script asp-location="Footer">
+    (function () {
+        var root = document.getElementById('@componentId');
+        if (!root) return;
+
+        var turkeyCountryId = parseInt(root.getAttribute('data-turkey-country-id'), 10);
+        var tcknInput = document.getElementById('@tcknField');
+        var vknInput = document.getElementById('@vknField');
+        var vergiDairesiSelect = root.querySelector('.tc-inv-vergi-dairesi');
+
+        var form = root.closest('form');
+        if (!form) return;
+
+        var nativeCountrySelect = form.querySelector('[data-trigger="country-select"]')
+            || form.querySelector('[id$="CountryId"]');
+        var provinceSelect = form.querySelector('[id$="ProvinceId"]');
+
+        function isTurkey() {
+            if (!nativeCountrySelect) return true;
+            return parseInt(nativeCountrySelect.value, 10) === turkeyCountryId;
+        }
+
+        function applyVisibility() {
+            root.style.display = isTurkey() ? '' : 'none';
+        }
+
+        if (nativeCountrySelect) nativeCountrySelect.addEventListener('change', applyVisibility);
+        applyVisibility();
+
+        // === Sadece rakam filtresi (TCKN, VKN) ===
+        function digitsOnly(input) {
+            if (!input) return;
+            input.addEventListener('input', function () {
+                var cleaned = input.value.replace(/\D/g, '');
+                if (cleaned !== input.value) input.value = cleaned;
+            });
+            input.addEventListener('paste', function (e) {
+                var pasted = (e.clipboardData || window.clipboardData).getData('text');
+                e.preventDefault();
+                var cleaned = pasted.replace(/\D/g, '');
+                document.execCommand('insertText', false, cleaned);
+            });
+        }
+        digitsOnly(tcknInput);
+        digitsOnly(vknInput);
+
+        // === Vergi dairesi cascading ===
+        function loadVergiDaireleri(provinceId) {
+            if (!vergiDairesiSelect) return;
+            var keep = vergiDairesiSelect.dataset.selected;
+            vergiDairesiSelect.innerHTML = '<option value="">Vergi dairesi seçiniz</option>';
+            if (!provinceId) {
+                vergiDairesiSelect.innerHTML = '<option value="">Önce il seçiniz</option>';
+                return;
+            }
+            fetch('/Plugins/TurkeyCore/api/tax-offices/' + provinceId, { credentials: 'same-origin' })
+                .then(function (r) { return r.ok ? r.json() : []; })
+                .then(function (items) {
+                    items.forEach(function (item) {
+                        var opt = document.createElement('option');
+                        opt.value = item.id;
+                        opt.textContent = item.name + (item.code ? ' (' + item.code + ')' : '');
+                        if (String(item.id) === String(keep)) opt.selected = true;
+                        vergiDairesiSelect.appendChild(opt);
+                    });
+                })
+                .catch(function () { /* sessizce yok say */ });
+        }
+
+        if (vergiDairesiSelect && provinceSelect) {
+            provinceSelect.addEventListener('change', function () {
+                loadVergiDaireleri(provinceSelect.value);
+            });
+            if (provinceSelect.value) loadVergiDaireleri(provinceSelect.value);
+        }
+
+        // === Validasyon (blur'da) ===
+        function validate(input, url, hintId) {
+            if (!input) return;
+            var hint = document.getElementById(hintId);
+            input.addEventListener('blur', function () {
+                if (!input.value) {
+                    if (hint) { hint.textContent = ''; hint.className = 'tc-inv-hint'; }
+                    return;
+                }
+                fetch(url, {
+                    method: 'POST',
+                    credentials: 'same-origin',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ tckn: input.value, vkn: input.value })
+                }).then(function (r) { return r.json(); }).then(function (res) {
+                    if (!hint) return;
+                    if (res.isValid) {
+                        hint.textContent = '✓ Geçerli';
+                        hint.className = 'tc-inv-hint is-valid';
+                    } else {
+                        hint.textContent = res.message || 'Geçersiz';
+                        hint.className = 'tc-inv-hint is-invalid';
+                    }
+                });
+            });
+        }
+        validate(tcknInput, '/Plugins/TurkeyCore/api/validate-tckn', '@tcknField-hint');
+        validate(vknInput, '/Plugins/TurkeyCore/api/validate-vkn', '@vknField-hint');
+    })();
+</script>

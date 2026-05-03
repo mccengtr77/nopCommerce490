@@ -1,0 +1,21 @@
+@using Nop.Plugin.Misc.TurkishConsumerLaw.Components.EtbisQrCode
+@model EtbisQrCodeModel
+
+@*
+    ETBİS karekodu — admin paneli üzerinden eticaret.gov.tr'den alınan HTML/SVG
+    kodu (trusted input) olduğu için Html.Raw ile render ediliyor.
+    XSS riski yok: storefront kullanıcısı bu içeriği değiştiremez.
+*@
+<div class="etbis-qr-code text-center my-3">
+    @Html.Raw(Model.QrCodeHtml)
+
+    @if (!string.IsNullOrWhiteSpace(Model.VerificationUrl))
+    {
+        <div class="etbis-verify-link mt-2">
+            <a href="@Model.VerificationUrl" target="_blank" rel="noopener noreferrer"
+               title="ETBİS Sicil Doğrulama">
+                ETBİS Sicil Doğrulama
+            </a>
+        </div>
+    }
+</div>

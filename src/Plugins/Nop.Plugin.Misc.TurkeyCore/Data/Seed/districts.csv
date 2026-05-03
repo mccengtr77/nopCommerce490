@@ -1,0 +1,141 @@
+# Türkiye ilçeleri — büyük şehirler tam, diğer iller örnek.
+# Format: ProvincePlateCode|DistrictName
+# Tam ~973 ilçe için Data/Seed/README.md kaynaklara bak.
+ProvincePlate|Name
+
+# === İSTANBUL (34) — 39 ilçe TAM ===
+34|Adalar
+34|Arnavutköy
+34|Ataşehir
+34|Avcılar
+34|Bağcılar
+34|Bahçelievler
+34|Bakırköy
+34|Başakşehir
+34|Bayrampaşa
+34|Beşiktaş
+34|Beykoz
+34|Beylikdüzü
+34|Beyoğlu
+34|Büyükçekmece
+34|Çatalca
+34|Çekmeköy
+34|Esenler
+34|Esenyurt
+34|Eyüpsultan
+34|Fatih
+34|Gaziosmanpaşa
+34|Güngören
+34|Kadıköy
+34|Kağıthane
+34|Kartal
+34|Küçükçekmece
+34|Maltepe
+34|Pendik
+34|Sancaktepe
+34|Sarıyer
+34|Silivri
+34|Sultanbeyli
+34|Sultangazi
+34|Şile
+34|Şişli
+34|Tuzla
+34|Ümraniye
+34|Üsküdar
+34|Zeytinburnu
+
+# === ANKARA (6) — 25 ilçe TAM ===
+6|Akyurt
+6|Altındağ
+6|Ayaş
+6|Bala
+6|Beypazarı
+6|Çamlıdere
+6|Çankaya
+6|Çubuk
+6|Elmadağ
+6|Etimesgut
+6|Evren
+6|Gölbaşı
+6|Güdül
+6|Haymana
+6|Kahramankazan
+6|Kalecik
+6|Keçiören
+6|Kızılcahamam
+6|Mamak
+6|Nallıhan
+6|Polatlı
+6|Pursaklar
+6|Sincan
+6|Şereflikoçhisar
+6|Yenimahalle
+
+# === İZMİR (35) — 30 ilçe TAM ===
+35|Aliağa
+35|Balçova
+35|Bayındır
+35|Bayraklı
+35|Bergama
+35|Beydağ
+35|Bornova
+35|Buca
+35|Çeşme
+35|Çiğli
+35|Dikili
+35|Foça
+35|Gaziemir
+35|Güzelbahçe
+35|Karabağlar
+35|Karaburun
+35|Karşıyaka
+35|Kemalpaşa
+35|Kınık
+35|Kiraz
+35|Konak
+35|Menderes
+35|Menemen
+35|Narlıdere
+35|Ödemiş
+35|Seferihisar
+35|Selçuk
+35|Tire
+35|Torbalı
+35|Urla
+
+# === BURSA (16) — örnek (17 ilçesi var, popülerleri) ===
+16|Osmangazi
+16|Yıldırım
+16|Nilüfer
+16|Mudanya
+16|İnegöl
+16|Gemlik
+16|Mustafakemalpaşa
+
+# === ANTALYA (7) — örnek ===
+7|Muratpaşa
+7|Konyaaltı
+7|Kepez
+7|Aksu
+7|Döşemealtı
+7|Alanya
+7|Manavgat
+7|Serik
+
+# === ADANA (1) — örnek ===
+1|Seyhan
+1|Çukurova
+1|Sarıçam
+1|Yüreğir
+
+# === GAZİANTEP (27) — örnek ===
+27|Şahinbey
+27|Şehitkamil
+
+# === KONYA (42) — örnek ===
+42|Selçuklu
+42|Karatay
+42|Meram
+
+# Diğer 71 il için ilçe listesi sonraki sürümde veya admin import ile eklenecek.
+# Açık kaynaklar için bkz. Data/Seed/README.md

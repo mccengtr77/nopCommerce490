@@ -1,0 +1,105 @@
+@using Nop.Plugin.Misc.TurkishConsumerLaw.Components.DataSubjectRequestForm
+@model DataSubjectRequestFormModel
+
+<div class="tcl-dsr-form-wrapper">
+    <h3>KVKK m.11 Veri Sahibi Başvurusu</h3>
+    <p class="text-muted">
+        Kişisel verilerinize ilişkin haklarınızı (bilgi alma, düzeltme, silme vb.)
+        bu form ile kullanabilirsiniz. Başvurunuz en geç <strong>30 gün</strong> içinde
+        e-posta adresinize yanıtlanır.
+    </p>
+
+    <form id="tcl-dsr-form" novalidate>
+        <div class="form-group">
+            <label for="tcl-dsr-name">Ad Soyad <span class="text-danger">*</span></label>
+            <input type="text" id="tcl-dsr-name" name="FullName" class="form-control"
+                   value="@Model.DefaultFullName" required minlength="2" maxlength="255" />
+        </div>
+
+        <div class="form-group">
+            <label for="tcl-dsr-email">E-posta <span class="text-danger">*</span></label>
+            <input type="email" id="tcl-dsr-email" name="Email" class="form-control"
+                   value="@Model.DefaultEmail" required maxlength="255" />
+        </div>
+
+        <div class="form-group">
+            <label for="tcl-dsr-phone">Telefon (opsiyonel)</label>
+            <input type="tel" id="tcl-dsr-phone" name="Phone" class="form-control" maxlength="50" />
+        </div>
+
+        <div class="form-group">
+            <label for="tcl-dsr-type">Başvuru Türü <span class="text-danger">*</span></label>
+            <select id="tcl-dsr-type" name="RequestType" class="form-control" required>
+                <option value="">Lütfen seçiniz...</option>
+                @foreach (var t in Model.RequestTypes)
+                {
+                    <option value="@t.Value">@t.Label</option>
+                }
+            </select>
+        </div>
+
+        <div class="form-group">
+            <label for="tcl-dsr-desc">Talep Açıklaması <span class="text-danger">*</span></label>
+            <textarea id="tcl-dsr-desc" name="Description" class="form-control" rows="5"
+                      required minlength="10" maxlength="4000"></textarea>
+            <small class="text-muted">En az 10 karakter girin. Talebiniz mümkün olduğunca açık olsun.</small>
+        </div>
+
+        <div id="tcl-dsr-message" class="alert" hidden></div>
+
+        <button type="submit" class="btn btn-primary">Başvuruyu Gönder</button>
+    </form>
+</div>
+
+<style>
+    .tcl-dsr-form-wrapper { max-width: 720px; }
+    .tcl-dsr-form-wrapper .form-group { margin-bottom: 14px; }
+</style>
+
+<script asp-location="Footer">
+    (function () {
+        var form = document.getElementById('tcl-dsr-form');
+        if (!form) return;
+
+        var msgBox = document.getElementById('tcl-dsr-message');
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            msgBox.hidden = true;
+
+            var payload = {
+                FullName: form.FullName.value,
+                Email: form.Email.value,
+                Phone: form.Phone.value,
+                RequestType: parseInt(form.RequestType.value, 10),
+                Description: form.Description.value
+            };
+
+            fetch('/Plugins/TurkishConsumerLaw/api/data-subject-request', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                msgBox.hidden = false;
+                if (data.success) {
+                    msgBox.className = 'alert alert-success';
+                    var deadline = new Date(data.deadlineUtc).toLocaleDateString('tr-TR');
+                    msgBox.textContent = 'Başvurunuz alındı (#' + data.requestId
+                        + '). En geç ' + deadline + ' tarihine kadar e-postanıza yanıt verilecek.';
+                    form.reset();
+                } else {
+                    msgBox.className = 'alert alert-danger';
+                    msgBox.textContent = data.error || 'Başvuru gönderilemedi.';
+                }
+            })
+            .catch(function () {
+                msgBox.hidden = false;
+                msgBox.className = 'alert alert-danger';
+                msgBox.textContent = 'Sunucu hatası. Lütfen tekrar deneyin.';
+            });
+        });
+    })();
+</script>

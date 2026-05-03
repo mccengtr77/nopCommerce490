@@ -1,0 +1,211 @@
+@model ConfigurationModel
+
+@{
+    Layout = "_ConfigurePlugin";
+}
+
+<form asp-controller="TurkeyCoreSettings" asp-action="Configure" method="post">
+    <div class="cards-group">
+
+        @* Veri Durumu Kartı — seed verisinin durumu *@
+        <div class="card card-default">
+            <div class="card-header">
+                <i class="fas fa-database"></i>
+                Veri Durumu
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-3">
+                        <strong>İl:</strong> @Model.DataStatus.ProvinceCount / 81
+                        @if (Model.DataStatus.ProvinceCount < 81)
+                        {
+                            <span class="badge badge-warning">Eksik</span>
+                        }
+                    </div>
+                    <div class="col-md-3">
+                        <strong>İlçe:</strong> @Model.DataStatus.DistrictCount
+                        @if (Model.DataStatus.DistrictCount == 0)
+                        {
+                            <span class="badge badge-warning">Boş</span>
+                        }
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Mahalle:</strong> @Model.DataStatus.NeighborhoodCount
+                        @if (Model.DataStatus.NeighborhoodCount == 0)
+                        {
+                            <span class="badge badge-warning">Boş</span>
+                        }
+                    </div>
+                    <div class="col-md-3">
+                        <strong>Vergi Dairesi:</strong> @Model.DataStatus.TaxOfficeCount
+                        @if (Model.DataStatus.TaxOfficeCount == 0)
+                        {
+                            <span class="badge badge-warning">Boş</span>
+                        }
+                    </div>
+                </div>
+                @if (Model.DataStatus.DistrictCount == 0 || Model.DataStatus.TaxOfficeCount == 0)
+                {
+                    <div class="alert alert-info mt-3">
+                        İlçe, mahalle veya vergi dairesi verisi henüz yüklenmemiş.
+                        Storefront cascading dropdown'larının çalışması için bu verileri
+                        admin import aracıyla veya elle eklemelisiniz.
+                    </div>
+                }
+            </div>
+        </div>
+
+        @* Genel Ayarlar Kartı *@
+        <div class="card card-default">
+            <div class="card-header">
+                <i class="fas fa-cog"></i>
+                Genel Ayarlar
+            </div>
+            <div class="card-body">
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-label asp-for="TcknRequiredOnRegistration" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="TcknRequiredOnRegistration" />
+                        <span asp-validation-for="TcknRequiredOnRegistration"></span>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-label asp-for="VknRequiredForCorporate" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="VknRequiredForCorporate" />
+                        <span asp-validation-for="VknRequiredForCorporate"></span>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-label asp-for="LocationSelectionRequired" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="LocationSelectionRequired" />
+                        <span asp-validation-for="LocationSelectionRequired"></span>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-label asp-for="DefaultVatRate" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="DefaultVatRate" />
+                        <span asp-validation-for="DefaultVatRate"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* TCMB Ayarları Kartı *@
+        <div class="card card-default">
+            <div class="card-header">
+                <i class="fas fa-exchange-alt"></i>
+                TCMB Döviz Kuru
+            </div>
+            <div class="card-body">
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-label asp-for="TcmbAutoUpdateEnabled" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="TcmbAutoUpdateEnabled" />
+                        <span asp-validation-for="TcmbAutoUpdateEnabled"></span>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-3"></div>
+                    <div class="col-md-9">
+                        <button type="submit" name="refresh-rates" value="true" class="btn btn-info">
+                            <i class="fas fa-sync"></i> Şimdi Güncelle
+                        </button>
+                    </div>
+                </div>
+
+                @if (Model.LatestRates.Any())
+                {
+                    <hr />
+                    <h5>En Güncel Kurlar (@Model.LatestRates.First().RateDateUtc.ToString("dd.MM.yyyy"))</h5>
+                    <table class="table table-sm table-striped">
+                        <thead>
+                            <tr>
+                                <th>Para Birimi</th>
+                                <th class="text-right">Forex Alış</th>
+                                <th class="text-right">Forex Satış</th>
+                                <th class="text-right">Banknote Alış</th>
+                                <th class="text-right">Banknote Satış</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var rate in Model.LatestRates)
+                            {
+                                <tr>
+                                    <td><strong>@rate.CurrencyCode</strong></td>
+                                    <td class="text-right">@rate.ForexBuying.ToString("N4")</td>
+                                    <td class="text-right">@rate.ForexSelling.ToString("N4")</td>
+                                    <td class="text-right">@(rate.BanknoteBuying?.ToString("N4") ?? "-")</td>
+                                    <td class="text-right">@(rate.BanknoteSelling?.ToString("N4") ?? "-")</td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="alert alert-warning">
+                        Henüz TCMB kuru çekilmedi. "Şimdi Güncelle" butonuna basarak başlayabilirsiniz.
+                    </div>
+                }
+            </div>
+        </div>
+
+        @* GİB Ayarları Kartı *@
+        <div class="card card-default">
+            <div class="card-header">
+                <i class="fas fa-file-invoice"></i>
+                GİB E-Fatura Mükellef Sorgu
+            </div>
+            <div class="card-body">
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-label asp-for="GibMukellefServiceUrl" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="GibMukellefServiceUrl" />
+                        <span asp-validation-for="GibMukellefServiceUrl"></span>
+                        <small class="text-muted">
+                            Boş bırakılırsa mükellef sorgusu mock döner.
+                            Resmi GİB servisi public değildir; özel entegratör (e-Logo, Mysoft, İzibiz) URL'si girin.
+                        </small>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-label asp-for="GibCacheTimeMinutes" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="GibCacheTimeMinutes" />
+                        <span asp-validation-for="GibCacheTimeMinutes"></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <div class="col-md-9 col-md-offset-3">
+                <button type="submit" name="save" value="save" class="btn btn-primary">
+                    @T("Admin.Common.Save")
+                </button>
+            </div>
+        </div>
+    </div>
+</form>

@@ -1,0 +1,61 @@
+@using Nop.Plugin.Misc.TurkishConsumerLaw.Components.ContractAcceptance
+@model ContractAcceptanceModel
+
+@*
+    Checkout MSS + ÖBF onay bölümü.
+    İki AYRI checkbox — Mesafeli Sözleşmeler Yönetmeliği gereği.
+    Form alanları: tcl-obf-accept, tcl-mss-accept (checkout submit'te zorunlu).
+*@
+<div class="tcl-contract-acceptance">
+    <h4>Sözleşmeler ve Ön Bilgilendirme</h4>
+
+    @if (Model.HasObf)
+    {
+        <div class="tcl-contract-block">
+            <details>
+                <summary><strong>Ön Bilgilendirme Formu (ÖBF)</strong> — okumak için tıklayın</summary>
+                <div class="tcl-contract-content">
+                    @Html.Raw(Model.ObfPreviewHtml)
+                    @if (Model.PreviewMode)
+                    {
+                        <p class="tcl-token-warning">
+                            <em>Yukarıdaki bilgiler önizlemedir. Sipariş onayından sonra kişiselleştirilmiş
+                            son hali e-posta ile iletilecek ve panelinizden indirilebilecektir.</em>
+                        </p>
+                    }
+                </div>
+            </details>
+            <label class="tcl-acceptance-label">
+                <input type="checkbox" name="tcl-obf-accept" value="true" required />
+                <strong>Ön Bilgilendirme Formu'nu okudum.</strong>
+            </label>
+        </div>
+    }
+
+    @if (Model.HasMss)
+    {
+        <div class="tcl-contract-block">
+            <details>
+                <summary><strong>Mesafeli Satış Sözleşmesi (MSS)</strong> — okumak için tıklayın</summary>
+                <div class="tcl-contract-content">
+                    @Html.Raw(Model.MssPreviewHtml)
+                </div>
+            </details>
+            <label class="tcl-acceptance-label">
+                <input type="checkbox" name="tcl-mss-accept" value="true" required />
+                <strong>Mesafeli Satış Sözleşmesi'ni okudum ve kabul ediyorum.</strong>
+            </label>
+        </div>
+    }
+</div>
+
+<style>
+    .tcl-contract-acceptance { margin: 16px 0; padding: 12px; border: 1px solid #e5e5e5; border-radius: 4px; background: #fafafa; }
+    .tcl-contract-block { margin-bottom: 14px; padding-bottom: 14px; border-bottom: 1px solid #eee; }
+    .tcl-contract-block:last-child { border-bottom: 0; }
+    .tcl-contract-block summary { cursor: pointer; padding: 6px 0; }
+    .tcl-contract-content { margin-top: 8px; max-height: 360px; overflow-y: auto; padding: 12px; background: #fff; border: 1px solid #e5e5e5; font-size: 0.92em; }
+    .tcl-token-warning { margin-top: 8px; color: #888; font-size: 0.85em; }
+    .tcl-acceptance-label { display: flex; align-items: flex-start; gap: 6px; margin-top: 8px; cursor: pointer; }
+    .tcl-acceptance-label input[type="checkbox"] { margin-top: 4px; flex-shrink: 0; }
+</style>

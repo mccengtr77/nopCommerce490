@@ -1,0 +1,104 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Copyright>Copyright © Mehmet ÇALIŞKAN</Copyright>
+    <Company>Mehmet ÇALIŞKAN</Company>
+    <Authors>Mehmet ÇALIŞKAN</Authors>
+    <RepositoryType>Git</RepositoryType>
+    <OutputPath>$(SolutionDir)\Presentation\Nop.Web\Plugins\Misc.TurkishConsumerLaw</OutputPath>
+    <OutDir>$(OutputPath)</OutDir>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="plugin.json" />
+    <None Remove="Areas\Admin\Views\Configure.cshtml" />
+    <None Remove="Areas\Admin\Views\_ViewImports.cshtml" />
+    <None Remove="Components\_ViewImports.cshtml" />
+    <None Remove="Components\EtbisQrCode\Default.cshtml" />
+    <None Remove="Components\CookieConsentBanner\Default.cshtml" />
+    <None Remove="Components\KvkkDisclosureNotice\Default.cshtml" />
+    <None Remove="Components\ExplicitConsentCheckboxes\Default.cshtml" />
+    <None Remove="Components\DataSubjectRequestForm\Default.cshtml" />
+    <None Remove="Areas\Admin\Views\DataSubjectRequests\List.cshtml" />
+    <None Remove="Areas\Admin\Views\DataSubjectRequests\Edit.cshtml" />
+    <None Remove="Areas\Admin\Views\Kvkk\Texts.cshtml" />
+    <None Remove="Areas\Admin\Views\Kvkk\EditConsent.cshtml" />
+    <None Remove="Areas\Admin\Views\Cookies\List.cshtml" />
+    <None Remove="Areas\Admin\Views\Cookies\Edit.cshtml" />
+    <None Remove="Components\WithdrawalRequestForm\Default.cshtml" />
+    <None Remove="Areas\Admin\Views\Withdrawal\List.cshtml" />
+    <None Remove="Areas\Admin\Views\Withdrawal\Edit.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="plugin.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Areas\Admin\Views\Configure.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Areas\Admin\Views\_ViewImports.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Components\_ViewImports.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Components\EtbisQrCode\Default.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Components\CookieConsentBanner\Default.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Components\KvkkDisclosureNotice\Default.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Components\ExplicitConsentCheckboxes\Default.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Components\DataSubjectRequestForm\Default.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Areas\Admin\Views\DataSubjectRequests\List.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Areas\Admin\Views\DataSubjectRequests\Edit.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Areas\Admin\Views\Kvkk\Texts.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Areas\Admin\Views\Kvkk\EditConsent.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Areas\Admin\Views\Cookies\List.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Areas\Admin\Views\Cookies\Edit.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Components\WithdrawalRequestForm\Default.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Areas\Admin\Views\Withdrawal\List.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Areas\Admin\Views\Withdrawal\Edit.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(SolutionDir)\Presentation\Nop.Web\Nop.Web.csproj" />
+    <ProjectReference Include="$(SolutionDir)\Plugins\Nop.Plugin.Misc.TurkeyCore\Nop.Plugin.Misc.TurkeyCore.csproj" />
+    <ClearPluginAssemblies Include="$(SolutionDir)\Build\ClearPluginAssemblies.proj" />
+  </ItemGroup>
+
+  <Target Name="NopTarget" AfterTargets="Build">
+    <MSBuild Projects="@(ClearPluginAssemblies)" Properties="PluginPath=$(OutDir)" Targets="NopClear" />
+  </Target>
+
+</Project>

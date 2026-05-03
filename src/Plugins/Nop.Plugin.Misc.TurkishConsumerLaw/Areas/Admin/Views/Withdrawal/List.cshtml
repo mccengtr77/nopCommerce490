@@ -1,0 +1,104 @@
+@using Nop.Plugin.Misc.TurkishConsumerLaw.Areas.Admin.Models.Withdrawal
+@using Nop.Plugin.Misc.TurkishConsumerLaw.Domain.Withdrawal
+@model WithdrawalListModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewBag.PageTitle = "Cayma Talepleri";
+}
+
+<div class="content-header clearfix">
+    <h1 class="float-left">Cayma Talepleri</h1>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="card card-default">
+            <div class="card-header">
+                <i class="fas fa-filter"></i> Durum Filtresi
+            </div>
+            <div class="card-body">
+                <div class="btn-group flex-wrap">
+                    <a asp-action="List" class="btn @(Model.FilterStatus == null ? "btn-primary" : "btn-outline-primary")">Tümü</a>
+                    @foreach (var s in Enum.GetValues<WithdrawalStatus>())
+                    {
+                        <a asp-action="List" asp-route-status="@s" class="btn @(Model.FilterStatus == s ? "btn-primary" : "btn-outline-primary")">
+                            @s
+                        </a>
+                    }
+                </div>
+            </div>
+        </div>
+
+        <div class="card card-default">
+            <div class="card-body">
+                @if (Model.Items.Any())
+                {
+                    <table class="table table-hover table-striped">
+                        <thead>
+                            <tr>
+                                <th>#</th>
+                                <th>Sipariş</th>
+                                <th>Müşteri</th>
+                                <th>Durum</th>
+                                <th>Sebep</th>
+                                <th>Talep</th>
+                                <th>Refund</th>
+                                <th></th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var row in Model.Items)
+                            {
+                                var statusClass = row.Status switch
+                                {
+                                    WithdrawalStatus.Pending => "badge-warning",
+                                    WithdrawalStatus.Approved or WithdrawalStatus.InTransit or WithdrawalStatus.Received or WithdrawalStatus.Inspected => "badge-info",
+                                    WithdrawalStatus.Refunded or WithdrawalStatus.Completed => "badge-success",
+                                    WithdrawalStatus.Rejected or WithdrawalStatus.Cancelled => "badge-secondary",
+                                    _ => "badge-light"
+                                };
+                                <tr>
+                                    <td>@row.Id</td>
+                                    <td>
+                                        <a asp-controller="Order" asp-action="Edit" asp-route-id="@row.OrderId">#@row.OrderId</a>
+                                    </td>
+                                    <td>
+                                        <a asp-controller="Customer" asp-action="Edit" asp-route-id="@row.CustomerId">@row.CustomerId</a>
+                                    </td>
+                                    <td>
+                                        <span class="badge @statusClass">@row.StatusLabel</span>
+                                    </td>
+                                    <td>@row.ReasonLabel</td>
+                                    <td>@row.SubmittedOnUtc.ToString("dd.MM.yyyy HH:mm")</td>
+                                    <td>
+                                        @if (row.RefundedOnUtc != null)
+                                        {
+                                            <span class="text-success">
+                                                @row.RefundAmount?.ToString("N2") ₺<br />
+                                                <small>@row.RefundedOnUtc?.ToString("dd.MM.yyyy")</small>
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="text-muted">—</span>
+                                        }
+                                    </td>
+                                    <td>
+                                        <a asp-action="Edit" asp-route-id="@row.Id" class="btn btn-sm btn-primary">
+                                            <i class="fas fa-edit"></i> Aç
+                                        </a>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                }
+                else
+                {
+                    <div class="alert alert-info mb-0">Bu durumda cayma talebi yok.</div>
+                }
+            </div>
+        </div>
+    </div>
+</section>

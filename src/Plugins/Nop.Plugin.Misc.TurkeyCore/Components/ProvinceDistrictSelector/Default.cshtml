@@ -1,0 +1,184 @@
+@using Nop.Plugin.Misc.TurkeyCore.Components.ProvinceDistrictSelector
+@model ProvinceDistrictSelectorModel
+
+@{
+    var prefix = string.IsNullOrEmpty(Model.FieldNamePrefix)
+        ? string.Empty
+        : Model.FieldNamePrefix + ".";
+    var provinceField = $"{prefix}ProvinceId";
+    var districtField = $"{prefix}DistrictId";
+    var neighborhoodField = $"{prefix}NeighborhoodId";
+    var componentId = $"tc-loc-{Guid.NewGuid():N}";
+    var initialDisplay = Model.InitiallyHidden ? "none" : "";
+}
+
+<div class="turkey-location-selector"
+     id="@componentId"
+     data-turkey-country-id="@Model.TurkeyCountryId"
+     style="display:@initialDisplay">
+    <div class="inputs">
+        <label for="@provinceField">İl:</label>
+        <select name="@provinceField" id="@provinceField" class="tc-province" data-trigger="tc-province-select">
+            <option value="">İl seçiniz</option>
+            @foreach (var p in Model.Provinces)
+            {
+                <option value="@p.Id" selected="@(p.Id == Model.SelectedProvinceId)">
+                    @p.Name
+                </option>
+            }
+        </select>
+    </div>
+
+    @* disabled attribute Razor'da bool render edildiğinde "False" string'i olarak HTML'e gelir
+       ve HTML bunu "disabled var" olarak yorumlar. JS tarafında baştan state set edilir. *@
+    <div class="inputs">
+        <label for="@districtField">İlçe:</label>
+        <select name="@districtField" id="@districtField" class="tc-district">
+            <option value="">İlçe seçiniz</option>
+            @foreach (var d in Model.Districts)
+            {
+                <option value="@d.Id" selected="@(d.Id == Model.SelectedDistrictId)">
+                    @d.Name
+                </option>
+            }
+        </select>
+    </div>
+
+    <div class="inputs">
+        <label for="@neighborhoodField">Mahalle:</label>
+        <select name="@neighborhoodField" id="@neighborhoodField" class="tc-neighborhood">
+            <option value="">Mahalle seçiniz</option>
+            @foreach (var n in Model.Neighborhoods)
+            {
+                <option value="@n.Id" data-postal="@n.PostalCode" selected="@(n.Id == Model.SelectedNeighborhoodId)">
+                    @n.Name @(string.IsNullOrEmpty(n.PostalCode) ? "" : $"({n.PostalCode})")
+                </option>
+            }
+        </select>
+    </div>
+</div>
+
+<script asp-location="Footer">
+    (function () {
+        var root = document.getElementById('@componentId');
+        if (!root) return;
+
+        var turkeyCountryId = parseInt(root.getAttribute('data-turkey-country-id'), 10);
+        var provinceSelect = root.querySelector('.tc-province');
+        var districtSelect = root.querySelector('.tc-district');
+        var neighborhoodSelect = root.querySelector('.tc-neighborhood');
+
+        // Plugin override template'i ile native alanlar .tc-native-state/-city/-zip class'larıyla işaretli.
+        // Country select'i ise nopCommerce'in ürettiği data-trigger="country-select" attribute'una sahip.
+        var form = root.closest('form');
+        if (!form) return;
+
+        var nativeCountrySelect = form.querySelector('[data-trigger="country-select"]')
+            || form.querySelector('[id$="CountryId"]');
+        var nativeStateRow = form.querySelector('.tc-native-state');
+        var nativeCityRow = form.querySelector('.tc-native-city');
+        var nativeZipRow = form.querySelector('.tc-native-zip');
+        var nativeStateSelect = nativeStateRow ? nativeStateRow.querySelector('select') : null;
+        var nativeCityInput = nativeCityRow ? nativeCityRow.querySelector('input') : null;
+        var nativeZipInput = nativeZipRow ? nativeZipRow.querySelector('input') : null;
+
+        // İlk render'da state yönetimi — server'da disabled attribute basmıyoruz, JS kontrolünde
+        districtSelect.disabled = !provinceSelect.value;
+        neighborhoodSelect.disabled = !districtSelect.value;
+
+        function isTurkey() {
+            if (!nativeCountrySelect) return true; // ülke kontrolü yoksa hep göster
+            return parseInt(nativeCountrySelect.value, 10) === turkeyCountryId;
+        }
+
+        function toggleVisibility() {
+            var turkey = isTurkey();
+            root.style.display = turkey ? '' : 'none';
+            // Native State/City/Zip alanlarını gizle (Türkiye'de bizim cascade veriyi sağlıyor)
+            if (nativeStateRow) nativeStateRow.style.display = turkey ? 'none' : '';
+            if (nativeCityRow) nativeCityRow.style.display = turkey ? 'none' : '';
+            if (nativeZipRow) nativeZipRow.style.display = turkey ? 'none' : '';
+        }
+
+        function syncNativeCity() {
+            // İlçe seçildiyse city = ilçe adı, yoksa il adı
+            if (!nativeCityInput) return;
+            var districtText = districtSelect.options[districtSelect.selectedIndex];
+            var provinceText = provinceSelect.options[provinceSelect.selectedIndex];
+            if (districtSelect.value && districtText) {
+                nativeCityInput.value = districtText.text.trim();
+            } else if (provinceSelect.value && provinceText) {
+                nativeCityInput.value = provinceText.text.trim();
+            } else {
+                nativeCityInput.value = '';
+            }
+        }
+
+        function syncNativeZip() {
+            if (!nativeZipInput) return;
+            var nOpt = neighborhoodSelect.options[neighborhoodSelect.selectedIndex];
+            var postal = nOpt ? (nOpt.dataset.postal || '') : '';
+            if (postal) nativeZipInput.value = postal;
+        }
+
+        function resetSelect(select, placeholder) {
+            select.innerHTML = '<option value="">' + placeholder + '</option>';
+            select.disabled = true;
+        }
+
+        function loadOptions(url, select, placeholder, mapper, onDone) {
+            resetSelect(select, placeholder);
+            fetch(url, { credentials: 'same-origin' })
+                .then(function (r) { return r.ok ? r.json() : []; })
+                .then(function (items) {
+                    if (items && items.length) {
+                        items.forEach(function (item) {
+                            var opt = document.createElement('option');
+                            mapper(item, opt);
+                            select.appendChild(opt);
+                        });
+                        select.disabled = false;
+                    }
+                    if (onDone) onDone();
+                })
+                .catch(function () { if (onDone) onDone(); });
+        }
+
+        provinceSelect.addEventListener('change', function () {
+            var id = provinceSelect.value;
+            resetSelect(neighborhoodSelect, 'Mahalle seçiniz');
+            if (!id) {
+                resetSelect(districtSelect, 'İlçe seçiniz');
+                syncNativeCity();
+                return;
+            }
+            loadOptions('/Plugins/TurkeyCore/api/districts/' + id, districtSelect, 'İlçe seçiniz',
+                function (item, opt) { opt.value = item.id; opt.textContent = item.name; },
+                syncNativeCity);
+        });
+
+        districtSelect.addEventListener('change', function () {
+            var id = districtSelect.value;
+            syncNativeCity();
+            if (!id) {
+                resetSelect(neighborhoodSelect, 'Mahalle seçiniz');
+                return;
+            }
+            loadOptions('/Plugins/TurkeyCore/api/neighborhoods/' + id, neighborhoodSelect, 'Mahalle seçiniz',
+                function (item, opt) {
+                    opt.value = item.id;
+                    opt.dataset.postal = item.postalCode || '';
+                    opt.textContent = item.postalCode ? (item.name + ' (' + item.postalCode + ')') : item.name;
+                });
+        });
+
+        neighborhoodSelect.addEventListener('change', syncNativeZip);
+
+        if (nativeCountrySelect) {
+            nativeCountrySelect.addEventListener('change', toggleVisibility);
+        }
+
+        // İlk render
+        toggleVisibility();
+    })();
+</script>

@@ -1,0 +1,452 @@
+@using Nop.Plugin.Misc.TurkishConsumerLaw.Components.CookieConsentBanner
+@using Nop.Plugin.Misc.TurkishConsumerLaw.Domain.Cookies
+@model CookieConsentBannerModel
+
+@{
+    var positionClass = Model.Position == "top" ? "tcl-cc-top" : "tcl-cc-bottom";
+
+    // Kategori bilgileri — title, çerez listesi, default checked, disabled
+    var categories = new[]
+    {
+        (Cat: CookieCategory.Necessary,  Title: "Zorunlu",      Defs: Model.Necessary,  DefaultChecked: true,  Disabled: true),
+        (Cat: CookieCategory.Functional, Title: "İşlevsellik",  Defs: Model.Functional, DefaultChecked: false, Disabled: false),
+        (Cat: CookieCategory.Analytics,  Title: "Analitik",     Defs: Model.Analytics,  DefaultChecked: false, Disabled: false),
+        (Cat: CookieCategory.Marketing,  Title: "Pazarlama",    Defs: Model.Marketing,  DefaultChecked: false, Disabled: false)
+    };
+}
+
+<div id="tcl-cookie-consent" class="tcl-cookie-consent @positionClass" role="dialog"
+     aria-label="Çerez Tercihleri" aria-hidden="true" aria-modal="true" hidden
+     data-cookie-name="@Model.ConsentCookieName"
+     data-policy-version="@Model.PolicyVersion">
+
+    <div class="tcl-cc-card">
+        <div class="tcl-cc-header">
+            <div class="tcl-cc-icon" aria-hidden="true">
+                <svg xmlns="http://www.w3.org/2000/svg" width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M21.598 11.064a1.006 1.006 0 0 0-.854-.172A2.99 2.99 0 0 1 17.99 9.83a3.003 3.003 0 0 1-1.578-3.005 1 1 0 0 0-.594-1.034 3.002 3.002 0 0 1-1.84-2.595 1 1 0 0 0-.41-.74 1.005 1.005 0 0 0-.83-.176A10 10 0 1 0 22 12c0-.121-.014-.24-.022-.36a1 1 0 0 0-.38-.576z"/>
+                    <circle cx="8.5" cy="12.5" r="1.5"/>
+                    <circle cx="14" cy="16" r="1.5"/>
+                    <circle cx="15" cy="9" r="1"/>
+                </svg>
+            </div>
+            <div class="tcl-cc-text">
+                <h4>Çerez Tercihleri</h4>
+                <p>
+                    Sitemizde size daha iyi hizmet sunabilmek için çerezler kullanıyoruz.
+                    <a href="#" id="tcl-cc-toggle-details">Tercihlerini özelleştir</a>
+                    <span aria-hidden="true">·</span>
+                    <a href="/cookie-policy" target="_blank" rel="noopener">Çerez politikası</a>
+                </p>
+            </div>
+        </div>
+
+        <div class="tcl-cc-details" hidden>
+            @foreach (var c in categories)
+            {
+                <div class="tcl-cc-category" data-category="@((int)c.Cat)">
+                    <label class="tcl-cc-switch-row">
+                        <span class="tcl-cc-switch-info">
+                            <strong>@c.Title</strong>
+                            @if (c.Disabled)
+                            {
+                                <span class="tcl-cc-badge">Zorunlu</span>
+                            }
+                            @if (c.Defs.Any())
+                            {
+                                <small class="tcl-cc-cookie-count">@c.Defs.Count çerez</small>
+                            }
+                        </span>
+                        <span class="tcl-cc-switch">
+                            <input type="checkbox" class="tcl-cc-toggle"
+                                   data-category="@((int)c.Cat)"
+                                   checked="@c.DefaultChecked"
+                                   disabled="@c.Disabled" />
+                            <span class="tcl-cc-slider"></span>
+                        </span>
+                    </label>
+
+                    @if (c.Defs.Any())
+                    {
+                        <details class="tcl-cc-cookie-details">
+                            <summary>Çerezleri görüntüle</summary>
+                            <ul class="tcl-cc-cookie-list">
+                                @foreach (var def in c.Defs)
+                                {
+                                    <li>
+                                        <strong>@def.Name</strong>
+                                        <span class="tcl-cc-meta">@def.Provider · @def.Duration</span>
+                                        <span class="tcl-cc-purpose">@def.Purpose</span>
+                                    </li>
+                                }
+                            </ul>
+                        </details>
+                    }
+                </div>
+            }
+        </div>
+
+        <div class="tcl-cc-actions">
+            <button type="button" class="tcl-cc-btn tcl-cc-btn-ghost" data-action="reject">
+                Sadece Zorunlular
+            </button>
+            <button type="button" class="tcl-cc-btn tcl-cc-btn-secondary" data-action="save">
+                Tercihleri Kaydet
+            </button>
+            <button type="button" class="tcl-cc-btn tcl-cc-btn-primary" data-action="accept-all">
+                Tümünü Kabul Et
+            </button>
+        </div>
+    </div>
+</div>
+
+<style>
+    /* Backdrop overlay (sayfanın geri kalanını yumuşak karartır) */
+    .tcl-cookie-consent {
+        position: fixed;
+        left: 0;
+        right: 0;
+        z-index: 9999;
+        padding: 16px;
+        background: rgba(15, 23, 42, 0.35);
+        backdrop-filter: blur(2px);
+        -webkit-backdrop-filter: blur(2px);
+        animation: tcl-cc-fade-in .25s ease-out;
+    }
+    .tcl-cc-bottom { bottom: 0; top: 0; display: flex; align-items: flex-end; }
+    .tcl-cc-top    { top: 0; bottom: 0; display: flex; align-items: flex-start; }
+
+    @@keyframes tcl-cc-fade-in {
+        from { opacity: 0; }
+        to   { opacity: 1; }
+    }
+    @@keyframes tcl-cc-slide-up {
+        from { transform: translateY(20px); opacity: 0; }
+        to   { transform: translateY(0); opacity: 1; }
+    }
+
+    .tcl-cc-card {
+        max-width: 980px;
+        width: 100%;
+        margin: 0 auto;
+        background: #ffffff;
+        border-radius: 14px;
+        box-shadow: 0 10px 40px rgba(0, 0, 0, 0.18), 0 2px 8px rgba(0, 0, 0, 0.08);
+        padding: 22px 24px;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        color: #1e293b;
+        animation: tcl-cc-slide-up .3s cubic-bezier(.2, .8, .2, 1);
+    }
+
+    .tcl-cc-header {
+        display: flex;
+        gap: 16px;
+        align-items: flex-start;
+    }
+    .tcl-cc-icon {
+        flex: 0 0 auto;
+        width: 44px; height: 44px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+        color: #b45309;
+        display: flex; align-items: center; justify-content: center;
+    }
+    .tcl-cc-text { flex: 1; min-width: 0; }
+    .tcl-cc-text h4 {
+        margin: 0 0 4px 0;
+        font-size: 1.05rem;
+        font-weight: 600;
+        color: #0f172a;
+        line-height: 1.3;
+    }
+    .tcl-cc-text p {
+        margin: 0;
+        font-size: 0.9rem;
+        line-height: 1.5;
+        color: #475569;
+    }
+    .tcl-cc-text a {
+        color: #2563eb;
+        text-decoration: none;
+        font-weight: 500;
+    }
+    .tcl-cc-text a:hover { text-decoration: underline; }
+
+    /* Detaylar bölümü */
+    .tcl-cc-details {
+        margin-top: 18px;
+        padding-top: 16px;
+        border-top: 1px solid #e2e8f0;
+    }
+    .tcl-cc-category {
+        padding: 10px 0;
+        border-bottom: 1px solid #f1f5f9;
+    }
+    .tcl-cc-category:last-child { border-bottom: 0; }
+
+    .tcl-cc-switch-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        cursor: pointer;
+        margin: 0;
+    }
+    .tcl-cc-switch-info {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+        min-width: 0;
+    }
+    .tcl-cc-switch-info strong {
+        font-size: 0.95rem;
+        color: #0f172a;
+    }
+    .tcl-cc-badge {
+        background: #f1f5f9;
+        color: #475569;
+        font-size: 0.7rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.03em;
+        padding: 2px 8px;
+        border-radius: 999px;
+    }
+    .tcl-cc-cookie-count {
+        color: #94a3b8;
+        font-size: 0.8rem;
+    }
+
+    /* iOS-style toggle switch */
+    .tcl-cc-switch {
+        position: relative;
+        display: inline-block;
+        width: 42px;
+        height: 24px;
+        flex: 0 0 auto;
+    }
+    .tcl-cc-switch input {
+        opacity: 0;
+        width: 0;
+        height: 0;
+    }
+    .tcl-cc-slider {
+        position: absolute;
+        cursor: pointer;
+        inset: 0;
+        background: #cbd5e1;
+        border-radius: 999px;
+        transition: background .2s;
+    }
+    .tcl-cc-slider::before {
+        content: "";
+        position: absolute;
+        height: 18px; width: 18px;
+        left: 3px; top: 3px;
+        background: #fff;
+        border-radius: 50%;
+        box-shadow: 0 1px 2px rgba(0,0,0,0.2);
+        transition: transform .2s;
+    }
+    .tcl-cc-switch input:checked + .tcl-cc-slider { background: #2563eb; }
+    .tcl-cc-switch input:checked + .tcl-cc-slider::before { transform: translateX(18px); }
+    .tcl-cc-switch input:disabled + .tcl-cc-slider { background: #94a3b8; cursor: not-allowed; opacity: 0.7; }
+
+    .tcl-cc-cookie-details {
+        margin-top: 8px;
+        font-size: 0.85rem;
+    }
+    .tcl-cc-cookie-details summary {
+        cursor: pointer;
+        color: #2563eb;
+        font-weight: 500;
+        padding: 4px 0;
+    }
+    .tcl-cc-cookie-details summary:hover { text-decoration: underline; }
+    .tcl-cc-cookie-list {
+        list-style: none;
+        margin: 8px 0 0 0;
+        padding: 12px;
+        background: #f8fafc;
+        border-radius: 8px;
+    }
+    .tcl-cc-cookie-list li {
+        padding: 6px 0;
+        border-bottom: 1px solid #e2e8f0;
+    }
+    .tcl-cc-cookie-list li:last-child { border-bottom: 0; }
+    .tcl-cc-cookie-list strong {
+        display: inline-block;
+        color: #0f172a;
+        font-size: 0.85rem;
+    }
+    .tcl-cc-meta {
+        margin-left: 8px;
+        color: #94a3b8;
+        font-size: 0.75rem;
+    }
+    .tcl-cc-purpose {
+        display: block;
+        color: #64748b;
+        font-size: 0.8rem;
+        margin-top: 2px;
+    }
+
+    /* Aksiyon butonları */
+    .tcl-cc-actions {
+        margin-top: 18px;
+        display: flex;
+        gap: 10px;
+        flex-wrap: wrap;
+        justify-content: flex-end;
+    }
+    .tcl-cc-btn {
+        font-family: inherit;
+        font-size: 0.9rem;
+        font-weight: 600;
+        line-height: 1;
+        padding: 11px 20px;
+        border-radius: 10px;
+        border: 1px solid transparent;
+        cursor: pointer;
+        transition: all .15s ease;
+        white-space: nowrap;
+    }
+    .tcl-cc-btn:focus-visible {
+        outline: 3px solid rgba(37, 99, 235, 0.35);
+        outline-offset: 2px;
+    }
+    .tcl-cc-btn-ghost {
+        background: transparent;
+        color: #64748b;
+        border-color: transparent;
+    }
+    .tcl-cc-btn-ghost:hover { color: #0f172a; background: #f1f5f9; }
+
+    .tcl-cc-btn-secondary {
+        background: #f8fafc;
+        color: #1e293b;
+        border-color: #e2e8f0;
+    }
+    .tcl-cc-btn-secondary:hover {
+        background: #f1f5f9;
+        border-color: #cbd5e1;
+    }
+
+    .tcl-cc-btn-primary {
+        background: #2563eb;
+        color: #ffffff;
+        border-color: #2563eb;
+        box-shadow: 0 1px 2px rgba(37, 99, 235, 0.3);
+    }
+    .tcl-cc-btn-primary:hover {
+        background: #1d4ed8;
+        border-color: #1d4ed8;
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.35);
+    }
+    .tcl-cc-btn-primary:active { transform: translateY(0); }
+
+    /* Mobile */
+    @@media (max-width: 640px) {
+        .tcl-cookie-consent { padding: 10px; }
+        .tcl-cc-card { padding: 18px; border-radius: 12px; }
+        .tcl-cc-header { gap: 12px; }
+        .tcl-cc-icon { width: 36px; height: 36px; }
+        .tcl-cc-icon svg { width: 22px; height: 22px; }
+        .tcl-cc-text h4 { font-size: 1rem; }
+        .tcl-cc-text p { font-size: 0.85rem; }
+        .tcl-cc-actions { flex-direction: column-reverse; }
+        .tcl-cc-actions .tcl-cc-btn { width: 100%; }
+    }
+
+    /* Dark mode (kullanıcı sistem tercihi) */
+    @@media (prefers-color-scheme: dark) {
+        .tcl-cc-card {
+            background: #1e293b;
+            color: #e2e8f0;
+        }
+        .tcl-cc-text h4 { color: #f1f5f9; }
+        .tcl-cc-text p { color: #cbd5e1; }
+        .tcl-cc-switch-info strong { color: #f1f5f9; }
+        .tcl-cc-details { border-color: #334155; }
+        .tcl-cc-category { border-color: #334155; }
+        .tcl-cc-badge { background: #334155; color: #cbd5e1; }
+        .tcl-cc-cookie-list { background: #0f172a; }
+        .tcl-cc-cookie-list li { border-color: #334155; }
+        .tcl-cc-btn-secondary {
+            background: #334155;
+            color: #e2e8f0;
+            border-color: #475569;
+        }
+        .tcl-cc-btn-secondary:hover { background: #475569; }
+        .tcl-cc-btn-ghost:hover { background: #334155; color: #f1f5f9; }
+    }
+</style>
+
+<script asp-location="Footer">
+    (function () {
+        var banner = document.getElementById('tcl-cookie-consent');
+        if (!banner) return;
+
+        var cookieName = banner.dataset.cookieName;
+
+        // Mevcut consent cookie var mı? Varsa banner'ı gösterme.
+        if (document.cookie.split('; ').some(function (c) { return c.indexOf(cookieName + '=') === 0; })) {
+            return;
+        }
+
+        banner.hidden = false;
+        banner.setAttribute('aria-hidden', 'false');
+
+        var toggleDetailsLink = banner.querySelector('#tcl-cc-toggle-details');
+        var details = banner.querySelector('.tcl-cc-details');
+        toggleDetailsLink.addEventListener('click', function (e) {
+            e.preventDefault();
+            details.hidden = !details.hidden;
+        });
+
+        function getToggle(category) {
+            return banner.querySelector('.tcl-cc-toggle[data-category="' + category + '"]');
+        }
+
+        function readChoices() {
+            return {
+                Functional: getToggle(2).checked,
+                Analytics:  getToggle(3).checked,
+                Marketing:  getToggle(4).checked
+            };
+        }
+
+        function send(payload) {
+            return fetch('/Plugins/TurkishConsumerLaw/api/cookie-consent', {
+                method: 'POST',
+                credentials: 'same-origin',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            }).then(function (r) { return r.ok; });
+        }
+
+        banner.querySelectorAll('.tcl-cc-btn').forEach(function (btn) {
+            btn.addEventListener('click', function () {
+                var action = btn.dataset.action;
+                var payload;
+                if (action === 'accept-all') {
+                    payload = { Functional: true, Analytics: true, Marketing: true };
+                } else if (action === 'reject') {
+                    payload = { Functional: false, Analytics: false, Marketing: false };
+                } else {
+                    payload = readChoices();
+                }
+                send(payload).then(function (ok) {
+                    if (ok) {
+                        banner.hidden = true;
+                        banner.setAttribute('aria-hidden', 'true');
+                    }
+                });
+            });
+        });
+    })();
+</script>

@@ -1,0 +1,12 @@
+{
+  "Group": "Misc",
+  "FriendlyName": "Türkiye Tüketici Hukuku - Yasal Uyumluluk Paketi",
+  "SystemName": "Misc.TurkishConsumerLaw",
+  "Version": "1.0.0",
+  "SupportedVersions": [ "4.90" ],
+  "Author": "Mehmet ÇALIŞKAN",
+  "DisplayOrder": 2,
+  "FileName": "Nop.Plugin.Misc.TurkishConsumerLaw.dll",
+  "Description": "Türk tüketici hukuku uyumluluk paketi: ETBİS karekod, Mesafeli Satış Sözleşmesi (MSS), Ön Bilgilendirme Formu (ÖBF), 14 gün cayma hakkı (2026 güncel), KVKK aydınlatma + açık rıza yönetimi (2026 yeni standart), çerez consent, İYS entegrasyonu, garanti belgesi, tüketici şikayet yönetimi.",
+  "DependsOnSystemNames": [ "Misc.TurkeyCore" ]
+}

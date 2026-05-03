@@ -1,0 +1,82 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <Copyright>Copyright © Mehmet ÇALIŞKAN</Copyright>
+    <Company>Mehmet ÇALIŞKAN</Company>
+    <Authors>Mehmet ÇALIŞKAN</Authors>
+    <PackageProjectUrl>https://github.com/mccengtr/nopCommerce-TurkeyCore</PackageProjectUrl>
+    <RepositoryType>Git</RepositoryType>
+    <OutputPath>$(SolutionDir)\Presentation\Nop.Web\Plugins\Misc.TurkeyCore</OutputPath>
+    <OutDir>$(OutputPath)</OutDir>
+    <CopyLocalLockFileAssemblies>false</CopyLocalLockFileAssemblies>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <None Remove="plugin.json" />
+    <None Remove="Areas\Admin\Views\Configure.cshtml" />
+    <None Remove="Areas\Admin\Views\_ViewImports.cshtml" />
+    <None Remove="Components\_ViewImports.cshtml" />
+    <None Remove="Components\ProvinceDistrictSelector\Default.cshtml" />
+    <None Remove="Components\CustomerTypeSelector\Default.cshtml" />
+    <None Remove="Components\TurkishCustomerInvoice\Default.cshtml" />
+    <None Remove="Components\TurkishAddressHeader\Default.cshtml" />
+    <None Remove="Views\Shared\_CreateOrUpdateAddress.cshtml" />
+    <None Remove="Views\_ViewImports.cshtml" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <Content Include="plugin.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Areas\Admin\Views\Configure.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Areas\Admin\Views\_ViewImports.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Components\_ViewImports.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Components\ProvinceDistrictSelector\Default.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Components\CustomerTypeSelector\Default.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Components\TurkishCustomerInvoice\Default.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Components\TurkishAddressHeader\Default.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Views\Shared\_CreateOrUpdateAddress.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Views\_ViewImports.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+  </ItemGroup>
+
+  <ItemGroup>
+    <!-- Seed CSV dosyaları — install-time SeedCsvReader ile assembly'den okunur -->
+    <EmbeddedResource Include="Data\Seed\provinces.csv" />
+    <EmbeddedResource Include="Data\Seed\districts.csv" />
+    <EmbeddedResource Include="Data\Seed\neighborhoods.csv" />
+    <EmbeddedResource Include="Data\Seed\taxoffices.csv" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="$(SolutionDir)\Presentation\Nop.Web\Nop.Web.csproj" />
+    <ClearPluginAssemblies Include="$(SolutionDir)\Build\ClearPluginAssemblies.proj" />
+  </ItemGroup>
+
+  <!-- This target execute after "Build" target -->
+  <Target Name="NopTarget" AfterTargets="Build">
+    <!-- Delete unnecessary libraries from plugins path -->
+    <MSBuild Projects="@(ClearPluginAssemblies)" Properties="PluginPath=$(OutDir)" Targets="NopClear" />
+  </Target>
+
+</Project>

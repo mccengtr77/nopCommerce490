@@ -1,0 +1,26 @@
+﻿@model MenuItemModel
+@using Nop.Core.Domain.Menus
+
+
+<li class="@(Model.MenuItemType == MenuItemType.Category ? "root-category-items" : "")">
+    @if (Model.ChildrenItems.Any())
+    {
+        @await Html.PartialAsync("_MenuItem.cshtml", Model)
+        <div class="plus-button"></div>
+        <div class="sublist-wrap">
+            <ul class="sublist">
+                <li class="back-button">
+                    <span>@T("SevenSpikes.Themes.Common.BackSublist")</span>
+                </li>
+                @foreach (var item in Model.ChildrenItems)
+                {
+                    @await Html.PartialAsync("_MenuItem.List.cshtml", item)
+                }
+            </ul>
+        </div>
+    }
+    else
+    {
+        @await Html.PartialAsync("_MenuItem.cshtml", Model)
+    }
+</li>

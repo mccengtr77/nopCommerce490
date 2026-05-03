@@ -1,0 +1,217 @@
+@model ConfigurationModel
+
+@{
+    Layout = "_ConfigurePlugin";
+}
+
+<form asp-controller="TurkishConsumerLawSettings" asp-action="Configure" method="post">
+    <div class="cards-group">
+
+        @* Hukuki uyarı *@
+        <div class="alert alert-warning">
+            <strong>Yasal Sorumluluk Reddi:</strong> Bu plugin yasal uyumluluğu kolaylaştırır,
+            ancak hukuki danışmanlık yerine geçmez. Şüpheli durumlarda avukatınıza danışın.
+        </div>
+
+        @* Hızlı Yönetim Linkleri *@
+        <div class="card card-default">
+            <div class="card-header">
+                <i class="fas fa-link"></i>
+                Yönetim Sayfaları
+            </div>
+            <div class="card-body">
+                <div class="d-flex flex-wrap" style="gap: 8px;">
+                    <a asp-controller="DataSubjectRequest" asp-action="List" asp-area="Admin" class="btn btn-outline-primary">
+                        <i class="fas fa-user-shield"></i> KVKK m.11 Başvuruları
+                    </a>
+                    <a asp-controller="Kvkk" asp-action="Texts" asp-area="Admin" class="btn btn-outline-primary">
+                        <i class="fas fa-file-alt"></i> KVKK Metinleri
+                    </a>
+                    <a asp-controller="CookieDefinition" asp-action="List" asp-area="Admin" class="btn btn-outline-primary">
+                        <i class="fas fa-cookie-bite"></i> Çerez Tanımları
+                    </a>
+                    <a asp-controller="Withdrawal" asp-action="List" asp-area="Admin" class="btn btn-outline-primary">
+                        <i class="fas fa-undo"></i> Cayma Talepleri
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        @* ETBİS Kartı *@
+        <div class="card card-default">
+            <div class="card-header">
+                <i class="fas fa-qrcode"></i>
+                @T("Plugins.Misc.TurkishConsumerLaw.Etbis.Title")
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    @T("Plugins.Misc.TurkishConsumerLaw.Etbis.LegalNote")
+                </div>
+
+                <input type="hidden" asp-for="ActiveEtbis.Id" />
+
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-label asp-for="ShowEtbisQrCodeInFooter" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="ShowEtbisQrCodeInFooter" />
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-label asp-for="ActiveEtbis.MersisNo" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="ActiveEtbis.MersisNo" />
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-label asp-for="ActiveEtbis.TradeName" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="ActiveEtbis.TradeName" />
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-label asp-for="ActiveEtbis.RegistrationDate" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="ActiveEtbis.RegistrationDate" />
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-label asp-for="ActiveEtbis.VerificationUrl" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="ActiveEtbis.VerificationUrl" />
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-label asp-for="ActiveEtbis.QrCodeHtml" />
+                    </div>
+                    <div class="col-md-9">
+                        <textarea asp-for="ActiveEtbis.QrCodeHtml" rows="6" class="form-control"></textarea>
+                        <small class="text-muted">eticaret.gov.tr admin panelinden ETBİS karekod kodunu kopyalayıp buraya yapıştırın.</small>
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-label asp-for="ActiveEtbis.IsActive" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="ActiveEtbis.IsActive" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* KVKK Kartı *@
+        <div class="card card-default">
+            <div class="card-header">
+                <i class="fas fa-user-shield"></i>
+                KVKK
+            </div>
+            <div class="card-body">
+                <div class="alert alert-info">
+                    @T("Plugins.Misc.TurkishConsumerLaw.Kvkk.LegalNote")
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-label asp-for="KvkkDisclosureMandatory" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="KvkkDisclosureMandatory" />
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-label asp-for="EnforceSeparateDisclosureAndConsent" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="EnforceSeparateDisclosureAndConsent" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* Çerez Kartı *@
+        <div class="card card-default">
+            <div class="card-header">
+                <i class="fas fa-cookie-bite"></i>
+                Çerez Consent
+            </div>
+            <div class="card-body">
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-label asp-for="CookieConsentEnabled" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="CookieConsentEnabled" />
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-label asp-for="CookieBannerPosition" />
+                    </div>
+                    <div class="col-md-9">
+                        <select asp-for="CookieBannerPosition" class="form-control">
+                            <option value="bottom">Alt (Bottom)</option>
+                            <option value="top">Üst (Top)</option>
+                        </select>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* Cayma Hakkı Kartı *@
+        <div class="card card-default">
+            <div class="card-header">
+                <i class="fas fa-undo"></i>
+                Cayma Hakkı
+            </div>
+            <div class="card-body">
+                <div class="alert alert-warning">
+                    @T("Plugins.Misc.TurkishConsumerLaw.Withdrawal.LegalNote2026")
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-label asp-for="WithdrawalPeriodDays" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="WithdrawalPeriodDays" />
+                    </div>
+                </div>
+
+                <div class="form-group row">
+                    <div class="col-md-3">
+                        <nop-label asp-for="ReturnShippingPaidBySeller" />
+                    </div>
+                    <div class="col-md-9">
+                        <nop-editor asp-for="ReturnShippingPaidBySeller" />
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <div class="col-md-9 col-md-offset-3">
+                <button type="submit" class="btn btn-primary">@T("Admin.Common.Save")</button>
+            </div>
+        </div>
+    </div>
+</form>

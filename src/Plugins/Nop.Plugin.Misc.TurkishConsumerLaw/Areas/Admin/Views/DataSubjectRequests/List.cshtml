@@ -1,0 +1,113 @@
+@using Nop.Plugin.Misc.TurkishConsumerLaw.Areas.Admin.Models.DataSubjectRequests
+@using Nop.Plugin.Misc.TurkishConsumerLaw.Domain.DataSubjectRequests
+@model DataSubjectRequestListModel
+
+@{
+    Layout = "_AdminLayout";
+    ViewBag.PageTitle = "KVKK m.11 Veri Sahibi Başvuruları";
+}
+
+<div class="content-header clearfix">
+    <h1 class="float-left">
+        KVKK m.11 Başvuruları
+    </h1>
+</div>
+
+<section class="content">
+    <div class="container-fluid">
+        <div class="form-horizontal">
+
+            @if (Model.OverdueCount > 0)
+            {
+                <div class="alert alert-danger">
+                    <i class="fas fa-exclamation-triangle"></i>
+                    <strong>@Model.OverdueCount adet başvuru</strong> KVKK m.13/(2) 30 günlük yasal süreyi aşmıştır.
+                    Yanıtlanmamış başvurular için Kurum'a şikayet riski vardır.
+                </div>
+            }
+
+            <div class="card card-default">
+                <div class="card-header">
+                    <i class="fas fa-filter"></i>
+                    Filtreler
+                </div>
+                <div class="card-body">
+                    <div class="btn-group">
+                        <a asp-action="List" class="btn @(Model.FilterStatus == null ? "btn-primary" : "btn-outline-primary")">Tümü</a>
+                        <a asp-action="List" asp-route-status="@DataSubjectRequestStatus.Submitted" class="btn @(Model.FilterStatus == DataSubjectRequestStatus.Submitted ? "btn-primary" : "btn-outline-primary")">Yeni</a>
+                        <a asp-action="List" asp-route-status="@DataSubjectRequestStatus.InReview" class="btn @(Model.FilterStatus == DataSubjectRequestStatus.InReview ? "btn-primary" : "btn-outline-primary")">İncelemede</a>
+                        <a asp-action="List" asp-route-status="@DataSubjectRequestStatus.Approved" class="btn @(Model.FilterStatus == DataSubjectRequestStatus.Approved ? "btn-primary" : "btn-outline-primary")">Kabul</a>
+                        <a asp-action="List" asp-route-status="@DataSubjectRequestStatus.Rejected" class="btn @(Model.FilterStatus == DataSubjectRequestStatus.Rejected ? "btn-primary" : "btn-outline-primary")">Ret</a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card card-default">
+                <div class="card-body">
+                    @if (Model.Items.Any())
+                    {
+                        <table class="table table-hover table-striped">
+                            <thead>
+                                <tr>
+                                    <th>#</th>
+                                    <th>Ad / E-posta</th>
+                                    <th>Talep Türü</th>
+                                    <th>Durum</th>
+                                    <th>Başvuru</th>
+                                    <th>Deadline</th>
+                                    <th>Kalan Gün</th>
+                                    <th></th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var row in Model.Items)
+                                {
+                                    var rowClass = row.RespondedOnUtc == null && row.DaysToDeadline < 0
+                                        ? "table-danger"
+                                        : (row.RespondedOnUtc == null && row.DaysToDeadline <= 7 ? "table-warning" : "");
+                                    <tr class="@rowClass">
+                                        <td>@row.Id</td>
+                                        <td>
+                                            <strong>@row.FullName</strong><br />
+                                            <small class="text-muted">@row.Email</small>
+                                        </td>
+                                        <td>@row.RequestTypeLabel</td>
+                                        <td>
+                                            <span class="badge badge-secondary">@row.StatusLabel</span>
+                                        </td>
+                                        <td>@row.SubmittedOnUtc.ToString("dd.MM.yyyy HH:mm")</td>
+                                        <td>@row.DeadlineUtc.ToString("dd.MM.yyyy")</td>
+                                        <td>
+                                            @if (row.RespondedOnUtc != null)
+                                            {
+                                                <span class="text-success">Yanıtlandı</span>
+                                            }
+                                            else if (row.DaysToDeadline < 0)
+                                            {
+                                                <span class="text-danger"><strong>@row.DaysToDeadline gün geçti</strong></span>
+                                            }
+                                            else
+                                            {
+                                                <span>@row.DaysToDeadline gün</span>
+                                            }
+                                        </td>
+                                        <td>
+                                            <a asp-action="Edit" asp-route-id="@row.Id" class="btn btn-sm btn-primary">
+                                                <i class="fas fa-edit"></i> Aç
+                                            </a>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <div class="alert alert-info mb-0">Bu durumda başvuru yok.</div>
+                    }
+                </div>
+            </div>
+
+        </div>
+    </div>
+</section>

@@ -1,0 +1,147 @@
+@using Nop.Plugin.Misc.TurkeyCore.Components.TurkishAddressHeader
+@using Nop.Plugin.Misc.TurkeyCore.Domain
+@model TurkishAddressHeaderModel
+
+@{
+    var prefix = string.IsNullOrEmpty(Model.FieldNamePrefix) ? string.Empty : Model.FieldNamePrefix + ".";
+    var adresAdiField = $"{prefix}AdresAdi";
+    var typeField = $"{prefix}MusteriTipi";
+    var componentId = $"tc-hdr-{Guid.NewGuid():N}";
+    var initialDisplay = Model.InitiallyHidden ? "none" : "";
+    var isIndividual = Model.MusteriTipi == TurkishCustomerType.Individual;
+}
+
+<div class="turkey-address-header"
+     id="@componentId"
+     data-turkey-country-id="@Model.TurkeyCountryId"
+     data-type-field="@typeField"
+     style="display:@initialDisplay">
+
+    <div class="inputs">
+        <label for="@adresAdiField">Adres Adı:</label>
+        <input type="text"
+               name="@adresAdiField"
+               id="@adresAdiField"
+               value="@Model.AdresAdi"
+               maxlength="100"
+               placeholder="Örn. Ev, Ofis, Yazlık" />
+    </div>
+
+    <div class="inputs">
+        <label>Müşteri Tipi:</label>
+        <div class="tc-hdr-radios">
+            <label class="tc-hdr-radio">
+                <input type="radio" name="@typeField"
+                       value="@((int)TurkishCustomerType.Individual)"
+                       checked="@isIndividual"
+                       data-tc-customer-type="individual" />
+                <span>Bireysel</span>
+            </label>
+            <label class="tc-hdr-radio">
+                <input type="radio" name="@typeField"
+                       value="@((int)TurkishCustomerType.Corporate)"
+                       checked="@(!isIndividual)"
+                       data-tc-customer-type="corporate" />
+                <span>Kurumsal</span>
+            </label>
+        </div>
+    </div>
+</div>
+
+<style>
+    .turkey-address-header .tc-hdr-radios {
+        display: flex; gap: 18px; padding: 6px 0;
+    }
+    .turkey-address-header .tc-hdr-radio {
+        display: inline-flex; align-items: center; gap: 6px;
+        font-weight: normal; cursor: pointer;
+    }
+    .turkey-address-header .tc-hdr-radio input[type="radio"] { margin: 0; }
+
+    /* Müşteri tipi class'ları — JS bunları root form'a uygular */
+    form.tc-customer-type-corporate .tc-bireysel-only { display: none !important; }
+    form.tc-customer-type-individual .tc-kurumsal-only { display: none !important; }
+</style>
+
+<script asp-location="Footer">
+    (function () {
+        var root = document.getElementById('@componentId');
+        if (!root) return;
+
+        var turkeyCountryId = parseInt(root.getAttribute('data-turkey-country-id'), 10);
+        var typeFieldName = root.getAttribute('data-type-field');
+        var form = root.closest('form');
+        if (!form) return;
+
+        var nativeCountrySelect = form.querySelector('[data-trigger="country-select"]')
+            || form.querySelector('[id$="CountryId"]');
+        var firstNameInput = form.querySelector('[id$="FirstName"]');
+        var lastNameInput = form.querySelector('[id$="LastName"]');
+        var companyInput = form.querySelector('[id$="Company"]');
+
+        function getRow(el) { return el ? (el.closest('.inputs') || el.parentElement) : null; }
+
+        var firstNameRow = getRow(firstNameInput);
+        var lastNameRow = getRow(lastNameInput);
+        var companyRow = getRow(companyInput);
+
+        // Rows'a class ata — CSS toggle bunları kullanacak
+        if (firstNameRow) firstNameRow.classList.add('tc-bireysel-only');
+        if (lastNameRow) lastNameRow.classList.add('tc-bireysel-only');
+        if (companyRow) companyRow.classList.add('tc-kurumsal-only');
+
+        function isTurkey() {
+            if (!nativeCountrySelect) return true;
+            return parseInt(nativeCountrySelect.value, 10) === turkeyCountryId;
+        }
+
+        function getSelectedType() {
+            var sel = form.querySelector('input[name="' + typeFieldName + '"]:checked');
+            return sel ? sel.dataset.tcCustomerType : 'individual';
+        }
+
+        function applyState() {
+            // Türkiye değilse — header'ı gizle, native form normal akar
+            if (!isTurkey()) {
+                root.style.display = 'none';
+                form.classList.remove('tc-customer-type-individual', 'tc-customer-type-corporate');
+                if (firstNameRow) firstNameRow.style.display = '';
+                if (lastNameRow) lastNameRow.style.display = '';
+                if (companyRow) companyRow.style.display = '';
+                return;
+            }
+            root.style.display = '';
+            var type = getSelectedType();
+            form.classList.remove('tc-customer-type-individual', 'tc-customer-type-corporate');
+            form.classList.add('tc-customer-type-' + type);
+        }
+
+        // Form submit: Kurumsal'da First/Last boşsa Company'den doldur (server validation için)
+        form.addEventListener('submit', function () {
+            if (!isTurkey()) return;
+            if (getSelectedType() !== 'corporate') return;
+            if (!companyInput) return;
+
+            var company = (companyInput.value || '').trim();
+            if (!company) return;
+
+            if (firstNameInput && !firstNameInput.value.trim()) {
+                // Şirket ismini ad/soyad olarak böl: ilk kelime ad, geri kalan soyad
+                var parts = company.split(/\s+/);
+                firstNameInput.value = parts[0] || company;
+                if (lastNameInput && !lastNameInput.value.trim()) {
+                    lastNameInput.value = parts.slice(1).join(' ') || '-';
+                }
+            } else if (lastNameInput && !lastNameInput.value.trim()) {
+                lastNameInput.value = '-';
+            }
+        }, true);
+
+        form.querySelectorAll('input[name="' + typeFieldName + '"]').forEach(function (r) {
+            r.addEventListener('change', applyState);
+        });
+        if (nativeCountrySelect) nativeCountrySelect.addEventListener('change', applyState);
+
+        applyState();
+    })();
+</script>

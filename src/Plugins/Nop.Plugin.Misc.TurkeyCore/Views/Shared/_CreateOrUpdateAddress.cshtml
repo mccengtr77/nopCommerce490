@@ -1,0 +1,291 @@
+@*
+    nopCommerce default _CreateOrUpdateAddress.cshtml partial'ının override'ı.
+
+    Sıra (Country=Turkey iken):
+      1. Adres Adı (header)
+      2. Müşteri Tipi (header)
+      3. Bireysel: Ad / Soyad / TCKN / Email
+         Kurumsal: Ünvan / Email
+      4. Country
+      5. İl / İlçe / Mahalle
+      6. Adres satırı 1 / 2
+      7. Telefon / Faks
+      8. Kurumsal: VKN / Vergi Dairesi (en sonda)
+      9. (gizli) native State/City/Zip — JS otomatik dolduruyor
+
+    Görünürlük: TurkishAddressHeader formdaki <form> elementine
+    .tc-customer-type-individual / .tc-customer-type-corporate class'ı ekler;
+    .tc-bireysel-only / .tc-kurumsal-only class'lı div'ler buna göre CSS ile gizlenir/gösterilir.
+*@
+@model AddressModel
+
+<input class="address-id" asp-for="Id" type="hidden"/>
+<div class="edit-address">
+
+    @* === 1) Adres Adı + Müşteri Tipi === *@
+    @await Component.InvokeAsync("TurkishAddressHeader", new { additionalData = Model })
+
+    @* === 2) Bireysel: Ad/Soyad/TCKN === *@
+    <div class="inputs">
+        <label asp-for="FirstName" asp-postfix=":"></label>
+        <input asp-for="FirstName" />
+        <nop-required />
+        <span asp-validation-for="FirstName"></span>
+    </div>
+    <div class="inputs">
+        <label asp-for="LastName" asp-postfix=":"></label>
+        <input asp-for="LastName" />
+        <nop-required />
+        <span asp-validation-for="LastName"></span>
+    </div>
+
+    @* TCKN — sadece bireysel akışta (Last name'den hemen sonra) *@
+    @await Component.InvokeAsync("TurkishCustomerInvoice", new { additionalData = Model, section = "tckn" })
+
+    @* === 3) Kurumsal: Ünvan === *@
+    @if (Model.CompanyEnabled)
+    {
+        <div class="inputs">
+            <label asp-for="Company">Ünvan:</label>
+            <input asp-for="Company" />
+            @if (Model.CompanyRequired)
+            {
+                <nop-required />
+            }
+            <span asp-validation-for="Company"></span>
+        </div>
+    }
+
+    @* === 4) Email === *@
+    <div class="inputs">
+        <label asp-for="Email" asp-postfix=":"></label>
+        <input asp-for="Email" />
+        <nop-required />
+        <span asp-validation-for="Email"></span>
+    </div>
+
+    @* === 5) Country === *@
+    @if (Model.CountryEnabled)
+    {
+        <div class="inputs">
+            <label asp-for="CountryId" asp-postfix=":"></label>
+            <select asp-for="CountryId" asp-items="Model.AvailableCountries"
+                    data-trigger="country-select"
+                    data-url="@(Url.RouteUrl(NopRouteNames.Ajax.GET_STATES_BY_COUNTRY_ID))"
+                    data-stateprovince="#@Html.IdFor(model => model.StateProvinceId)"
+                    data-loading="#states-loading-progress"></select>
+            <nop-required />
+            <span asp-validation-for="CountryId"></span>
+        </div>
+    }
+
+    @* === 6) İl / İlçe / Mahalle === *@
+    @await Component.InvokeAsync("ProvinceDistrictSelector", new { additionalData = Model })
+
+    @* === 7) Native State/City/Zip — Country=Turkey iken JS gizler === *@
+    @if (Model.CountryEnabled && Model.StateProvinceEnabled)
+    {
+        <div class="inputs tc-native-state">
+            <label asp-for="StateProvinceId" asp-postfix=":"></label>
+            <select asp-for="StateProvinceId" asp-items="Model.AvailableStates"
+                    data-trigger="state-select">
+            </select>
+            <span id="states-loading-progress" style="display: none;" class="please-wait">@T("Common.Wait")</span>
+            <span asp-validation-for="StateProvinceId"></span>
+        </div>
+    }
+    @if (Model.CountyEnabled)
+    {
+        <div class="inputs">
+            <label asp-for="County" asp-postfix=":"></label>
+            <input asp-for="County" />
+            @if (Model.CountyRequired)
+            {
+                <nop-required />
+            }
+            <span asp-validation-for="County"></span>
+        </div>
+    }
+    @if (Model.CityEnabled)
+    {
+        <div class="inputs tc-native-city">
+            <label asp-for="City" asp-postfix=":"></label>
+            <input asp-for="City" />
+            @if (Model.CityRequired)
+            {
+                <nop-required />
+            }
+            <span asp-validation-for="City"></span>
+        </div>
+    }
+
+    @* === 8) Adres satırları === *@
+    @if (Model.StreetAddressEnabled)
+    {
+        <div class="inputs">
+            <label asp-for="Address1" asp-postfix=":"></label>
+            <input asp-for="Address1" />
+            @if (Model.StreetAddressRequired)
+            {
+                <nop-required />
+            }
+            <span asp-validation-for="Address1"></span>
+        </div>
+    }
+    @if (Model.StreetAddress2Enabled)
+    {
+        <div class="inputs">
+            <label asp-for="Address2" asp-postfix=":"></label>
+            <input asp-for="Address2" />
+            @if (Model.StreetAddress2Required)
+            {
+                <nop-required />
+            }
+            <span asp-validation-for="Address2"></span>
+        </div>
+    }
+    @if (Model.ZipPostalCodeEnabled)
+    {
+        <div class="inputs tc-native-zip">
+            <label asp-for="ZipPostalCode" asp-postfix=":"></label>
+            <input asp-for="ZipPostalCode" />
+            @if (Model.ZipPostalCodeRequired)
+            {
+                <nop-required />
+            }
+            <span asp-validation-for="ZipPostalCode"></span>
+        </div>
+    }
+
+    @* === 9) Telefon / Faks (Türkiye format mask + alfabe block) === *@
+    @if (Model.PhoneEnabled)
+    {
+        <div class="inputs">
+            <label asp-for="PhoneNumber" asp-postfix=":"></label>
+            <input asp-for="PhoneNumber"
+                   class="tc-phone-input"
+                   inputmode="tel"
+                   autocomplete="tel"
+                   maxlength="20"
+                   placeholder="0 (5XX) XXX XX XX veya 0 (212) XXX XX XX" />
+            @if (Model.PhoneRequired)
+            {
+                <nop-required />
+            }
+            <span asp-validation-for="PhoneNumber"></span>
+        </div>
+    }
+    @if (Model.FaxEnabled)
+    {
+        <div class="inputs">
+            <label asp-for="FaxNumber" asp-postfix=":"></label>
+            <input asp-for="FaxNumber"
+                   class="tc-phone-input"
+                   inputmode="tel"
+                   autocomplete="tel"
+                   maxlength="20"
+                   placeholder="0 (212) XXX XX XX" />
+            @if (Model.FaxRequired)
+            {
+                <nop-required />
+            }
+            <span asp-validation-for="FaxNumber"></span>
+        </div>
+    }
+
+    @* === 10) Kurumsal: VKN + Vergi Dairesi (en sonda) === *@
+    @await Component.InvokeAsync("TurkishCustomerInvoice", new { additionalData = Model, section = "vergi" })
+
+    @if (Model.CustomAddressAttributes.Count > 0)
+    {
+        @await Html.PartialAsync("_AddressAttributes", Model.CustomAddressAttributes)
+    }
+    @await Component.InvokeAsync(typeof(WidgetViewComponent), new { widgetZone = PublicWidgetZones.AddressBottom, additionalData = Model })
+</div>
+
+@* Telefon/Faks formatlama (Türkiye sabit hat + GSM) *@
+<script asp-location="Footer">
+    (function () {
+        function formatTrPhone(raw) {
+            // Sadece rakamları al
+            var digits = raw.replace(/\D/g, '');
+
+            // Eğer "+90" prefix varsa kullan, yoksa ülke kodu olmadan
+            var hasPlus90 = /^\+?90/.test(raw.trim());
+
+            // Başında 0 veya 90 varsa düşür
+            if (digits.startsWith('90') && digits.length > 10) digits = digits.substring(2);
+            if (digits.startsWith('0')) digits = digits.substring(1);
+
+            // 10 hane bekleniyor: alan kodu (3) + ön ek (3) + sonek (2) + sonek (2)
+            var d = digits.substring(0, 10);
+            var p1 = d.substring(0, 3);
+            var p2 = d.substring(3, 6);
+            var p3 = d.substring(6, 8);
+            var p4 = d.substring(8, 10);
+
+            var prefix = hasPlus90 ? '+90 ' : '0 ';
+            if (!d.length) return '';
+            if (d.length <= 3) return prefix + '(' + p1;
+            if (d.length <= 6) return prefix + '(' + p1 + ') ' + p2;
+            if (d.length <= 8) return prefix + '(' + p1 + ') ' + p2 + ' ' + p3;
+            return prefix + '(' + p1 + ') ' + p2 + ' ' + p3 + ' ' + p4;
+        }
+
+        function isTurkishPhone(value) {
+            // Sabit hat alan kodları: 212-216, 222, 224-228, 232-236, 242-246, 252-256, 258, 262-266,
+            //                         272-276, 282-288, 312, 318-322, 324-328, 332-338, 342-346,
+            //                         352-358, 362-366, 372-380, 382-388, 392, 412-416, 422-428,
+            //                         432-438, 442-446, 452-456, 462-466, 472-476, 482-486
+            // GSM: 5XX
+            // Basit kontrol: 10 haneli, ilk hane 2-5 arası
+            var digits = value.replace(/\D/g, '');
+            if (digits.startsWith('90')) digits = digits.substring(2);
+            if (digits.startsWith('0')) digits = digits.substring(1);
+            return /^[2-5]\d{9}$/.test(digits);
+        }
+
+        document.querySelectorAll('.tc-phone-input').forEach(function (input) {
+            // Input'da: alfabe karakterlerini engelle, otomatik formatla
+            input.addEventListener('input', function () {
+                var formatted = formatTrPhone(input.value);
+                if (formatted !== input.value) {
+                    var caretEnd = formatted.length;
+                    input.value = formatted;
+                    input.setSelectionRange(caretEnd, caretEnd);
+                }
+            });
+
+            input.addEventListener('paste', function (e) {
+                e.preventDefault();
+                var pasted = (e.clipboardData || window.clipboardData).getData('text');
+                input.value = formatTrPhone(pasted);
+            });
+
+            // Blur'da geçerlilik göstergesi
+            input.addEventListener('blur', function () {
+                if (!input.value) {
+                    input.classList.remove('tc-phone-invalid');
+                    return;
+                }
+                if (isTurkishPhone(input.value)) {
+                    input.classList.remove('tc-phone-invalid');
+                } else {
+                    input.classList.add('tc-phone-invalid');
+                }
+            });
+
+            // Initial format (edit modunda gelen değer)
+            if (input.value) {
+                input.value = formatTrPhone(input.value);
+            }
+        });
+    })();
+</script>
+
+<style>
+    .tc-phone-input.tc-phone-invalid {
+        border-color: #b91c1c !important;
+        outline-color: #b91c1c;
+    }
+</style>

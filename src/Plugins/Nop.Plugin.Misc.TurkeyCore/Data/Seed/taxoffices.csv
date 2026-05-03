@@ -1,0 +1,86 @@
+# Türkiye vergi daireleri — büyük şehirlerden GİB resmi listesi örneği.
+# Format: ProvincePlateCode|TaxOfficeName|GibCode
+# Tam ~1000 vergi dairesi için Data/Seed/README.md kaynaklara bak.
+ProvincePlate|Name|Code
+
+# === İSTANBUL (34) — Anadolu yakası ===
+34|Anadolu Kurumlar V.D.|0660
+34|Beykoz V.D.|0290
+34|Erenköy V.D.|0270
+34|Göztepe V.D.|0280
+34|Hisar V.D.|0410
+34|Kadıköy V.D.|0030
+34|Kartal V.D.|0240
+34|Kozyatağı V.D.|0260
+34|Maltepe V.D.|0250
+34|Pendik V.D.|0440
+34|Sultanbeyli V.D.|0445
+34|Tuzla V.D.|0590
+34|Ümraniye V.D.|0395
+34|Üsküdar V.D.|0040
+
+# === İSTANBUL (34) — Avrupa yakası ===
+34|Avcılar V.D.|0220
+34|Bakırköy V.D.|0050
+34|Beşiktaş V.D.|0070
+34|Beyoğlu V.D.|0090
+34|Boğaziçi Kurumlar V.D.|0671
+34|Büyükçekmece V.D.|0210
+34|Esenler V.D.|0405
+34|Eyüp V.D.|0230
+34|Fatih V.D.|0080
+34|Gaziosmanpaşa V.D.|0190
+34|Güngören V.D.|0680
+34|Kağıthane V.D.|0350
+34|Küçükçekmece V.D.|0300
+34|Marmara Kurumlar V.D.|0666
+34|Mecidiyeköy V.D.|0130
+34|Şişli V.D.|0150
+34|Yenibosna V.D.|0480
+34|Zeytinburnu V.D.|0170
+
+# === ANKARA (6) ===
+6|Ankara Kurumlar V.D.|0450
+6|Atatürk V.D.|0451
+6|Başkent V.D.|0452
+6|Çankaya V.D.|0453
+6|Doğanbey V.D.|0454
+6|Hitit V.D.|0455
+6|Kavaklıdere V.D.|0456
+6|Maltepe V.D.|0457
+6|Mithatpaşa V.D.|0458
+6|Muhammed Ekici V.D.|0459
+6|Ostim V.D.|0460
+6|Seğmenler V.D.|0461
+6|Veraset ve Harçlar V.D.|0462
+6|Yıldırım Beyazıt V.D.|0463
+6|Yenimahalle V.D.|0464
+
+# === İZMİR (35) ===
+35|9 Eylül V.D.|0480
+35|Bornova V.D.|0481
+35|Buca V.D.|0482
+35|Çiğli V.D.|0483
+35|Ege Kurumlar V.D.|0484
+35|Gaziemir V.D.|0485
+35|Hasan Tahsin V.D.|0486
+35|Karşıyaka V.D.|0487
+35|Konak V.D.|0488
+35|Kemalpaşa V.D.|0489
+
+# === BURSA (16) ===
+16|Çekirge V.D.|0540
+16|Nilüfer V.D.|0541
+16|Osmangazi V.D.|0542
+16|Setbaşı V.D.|0543
+16|Yıldırım V.D.|0544
+16|Yıldırım Beyazıt V.D.|0545
+
+# === ANTALYA (7) ===
+7|Akdeniz Kurumlar V.D.|0570
+7|Düden V.D.|0571
+7|Kepez V.D.|0572
+7|Konyaaltı V.D.|0573
+7|Muratpaşa V.D.|0574
+
+# Tam ~1000 vergi dairesi için bkz. Data/Seed/README.md
