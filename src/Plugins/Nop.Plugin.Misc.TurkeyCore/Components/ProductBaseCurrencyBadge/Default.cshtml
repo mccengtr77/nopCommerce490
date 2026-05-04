@@ -1,0 +1,28 @@
+@model (decimal basePrice, string currencyCode, Nop.Core.Domain.Directory.Currency currency)
+
+@{
+    // Currency.DisplayLocale set ise nopCommerce o culture'a göre format yapar; yoksa Invariant.
+    // Format: "≈ 100,00 USD" veya symbol ile "≈ $100.00".
+    string formatted;
+    if (!string.IsNullOrEmpty(Model.currency.DisplayLocale))
+    {
+        try
+        {
+            var culture = new System.Globalization.CultureInfo(Model.currency.DisplayLocale);
+            formatted = Model.basePrice.ToString("C", culture);
+        }
+        catch
+        {
+            formatted = $"{Model.basePrice:N2} {Model.currencyCode}";
+        }
+    }
+    else
+    {
+        formatted = $"{Model.basePrice:N2} {Model.currencyCode}";
+    }
+}
+
+<div class="turkey-base-currency-badge" title="@($"Bu ürünün baz fiyatı {formatted} cinsindendir. TCMB güncel kuru ile TRY'ye çevrilmiştir.")"
+     style="display:inline-block; margin-top:4px; padding:2px 8px; background:rgba(0,0,0,0.04); border-radius:12px; font-size:0.82em; color:#666; font-weight:500;">
+    <i class="fas fa-globe" style="margin-right:4px; opacity:0.55;"></i>≈&nbsp;@formatted
+</div>

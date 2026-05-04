@@ -126,6 +126,24 @@ public class TurkishValidationService : ITurkishValidationService
         return d[9] == checksum;
     }
 
+    /// <inheritdoc />
+    public bool ValidateVergiOrTckn(string? value)
+    {
+        if (string.IsNullOrWhiteSpace(value))
+            return false;
+
+        var trimmed = value.Trim();
+
+        // Türkiye'de şahıs firmalarının vergi numarası TCKN'dir (213 sayılı VUK).
+        // 10 hane → tüzel kişi VKN, 11 hane → şahıs firması TCKN.
+        return trimmed.Length switch
+        {
+            TurkeyCoreDefaults.Validation.VergiNoLength => ValidateVergiNo(trimmed),
+            TurkeyCoreDefaults.Validation.TcKimlikNoLength => ValidateTcKimlikNo(trimmed),
+            _ => false
+        };
+    }
+
     #endregion
 
     #region IBAN

@@ -25,11 +25,12 @@
                    name="@tcknField"
                    id="@tcknField"
                    class="tc-digit-only"
+                   value="@Model.ExistingTcKimlikNo"
                    maxlength="11"
                    inputmode="numeric"
                    autocomplete="off"
                    pattern="[0-9]{11}"
-                   placeholder="@(Model.HasExistingTcKimlikNo ? "*********** (mevcut, değiştirmek için yeni değer girin)" : "11 haneli TC Kimlik No")" />
+                   placeholder="11 haneli TC Kimlik No" />
             <span class="tc-inv-hint" id="@tcknField-hint"></span>
         </div>
     }
@@ -37,17 +38,21 @@
     @if (Model.ShowVergi)
     {
         <div class="inputs tc-kurumsal-only">
-            <label for="@vknField">Vergi Kimlik No:</label>
+            <label for="@vknField">Vergi Kimlik No / TCKN:</label>
             <input type="text"
                    name="@vknField"
                    id="@vknField"
                    class="tc-digit-only"
-                   maxlength="10"
+                   value="@Model.ExistingVergiNo"
+                   maxlength="11"
                    inputmode="numeric"
                    autocomplete="off"
-                   pattern="[0-9]{10}"
-                   placeholder="@(Model.HasExistingVergiNo ? "********** (mevcut, değiştirmek için yeni değer girin)" : "10 haneli Vergi Kimlik No")" />
+                   pattern="[0-9]{10,11}"
+                   placeholder="10 haneli VKN veya 11 haneli TCKN (şahıs firması)" />
             <span class="tc-inv-hint" id="@vknField-hint"></span>
+            <small style="display:block; color:#94a3b8; font-size:0.8em; margin-top:2px;">
+                Tüzel kişi: 10 haneli VKN · Şahıs firması: 11 haneli TCKN
+            </small>
         </div>
 
         <div class="inputs tc-kurumsal-only">
@@ -147,7 +152,17 @@
         }
 
         // === Validasyon (blur'da) ===
-        function validate(input, url, hintId) {
+        // Bireysel TCKN her zaman 11 hane → /validate-tckn
+        // Kurumsal VKN/TCKN: 10 hane → /validate-vkn (tüzel kişi),
+        //                    11 hane → /validate-tckn (şahıs firması, vergi no = TCKN)
+        function getEndpointForLength(input, fixedUrl) {
+            if (fixedUrl) return fixedUrl;
+            var len = (input.value || '').length;
+            if (len === 11) return '/Plugins/TurkeyCore/api/validate-tckn';
+            return '/Plugins/TurkeyCore/api/validate-vkn';
+        }
+
+        function validate(input, fixedUrl, hintId) {
             if (!input) return;
             var hint = document.getElementById(hintId);
             input.addEventListener('blur', function () {
@@ -155,6 +170,9 @@
                     if (hint) { hint.textContent = ''; hint.className = 'tc-inv-hint'; }
                     return;
                 }
+                // VKN alanında uzunluğa göre endpoint seç (10→VKN, 11→TCKN)
+                // Bireysel TCKN alanında her zaman validate-tckn
+                var url = getEndpointForLength(input, fixedUrl);
                 fetch(url, {
                     method: 'POST',
                     credentials: 'same-origin',
@@ -163,7 +181,9 @@
                 }).then(function (r) { return r.json(); }).then(function (res) {
                     if (!hint) return;
                     if (res.isValid) {
-                        hint.textContent = '✓ Geçerli';
+                        hint.textContent = (input.value.length === 11)
+                            ? '✓ Geçerli (TCKN)'
+                            : '✓ Geçerli (VKN)';
                         hint.className = 'tc-inv-hint is-valid';
                     } else {
                         hint.textContent = res.message || 'Geçersiz';
@@ -172,7 +192,9 @@
                 });
             });
         }
+        // tcknInput (Bireysel) — sabit TCKN endpoint
         validate(tcknInput, '/Plugins/TurkeyCore/api/validate-tckn', '@tcknField-hint');
-        validate(vknInput, '/Plugins/TurkeyCore/api/validate-vkn', '@vknField-hint');
+        // vknInput (Kurumsal) — uzunluğa göre dinamik (null = dinamik mod)
+        validate(vknInput, null, '@vknField-hint');
     })();
 </script>

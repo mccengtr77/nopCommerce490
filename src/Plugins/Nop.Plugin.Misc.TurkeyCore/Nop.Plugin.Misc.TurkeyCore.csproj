@@ -25,6 +25,8 @@
     <None Remove="Components\TurkishAddressHeader\Default.cshtml" />
     <None Remove="Views\Shared\_CreateOrUpdateAddress.cshtml" />
     <None Remove="Views\_ViewImports.cshtml" />
+    <None Remove="Areas\Admin\Views\Shared\Components\TurkishProductExtensionAdmin\Default.cshtml" />
+    <None Remove="Components\ProductBaseCurrencyBadge\Default.cshtml" />
   </ItemGroup>
 
   <ItemGroup>
@@ -56,6 +58,12 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <Content Include="Views\_ViewImports.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Areas\Admin\Views\Shared\Components\TurkishProductExtensionAdmin\Default.cshtml">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="Components\ProductBaseCurrencyBadge\Default.cshtml">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
   </ItemGroup>

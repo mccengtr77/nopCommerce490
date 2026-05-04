@@ -19,6 +19,14 @@ public interface ITurkishValidationService
     bool ValidateVergiNo(string? vkn);
 
     /// <summary>
+    /// Vergi numarası alanı için esnek validasyon: değer 10 hane ise tüzel kişi VKN olarak,
+    /// 11 hane ise şahıs firması TCKN'si olarak doğrulanır. Türkiye'de şahıs firmalarının
+    /// vergi numarası kişinin TC Kimlik No'su ile aynıdır (213 sayılı VUK uyarınca).
+    /// </summary>
+    /// <returns>true: geçerli VKN ya da geçerli TCKN. false: ikisi de değil ya da uzunluk hatalı.</returns>
+    bool ValidateVergiOrTckn(string? value);
+
+    /// <summary>
     /// IBAN TR validasyonu (MOD-97 + ülke kodu kontrolü).
     /// TR + 24 rakam = 26 karakter (boşluksuz).
     /// </summary>

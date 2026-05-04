@@ -1,0 +1,97 @@
+@model Nop.Plugin.Misc.TurkeyCore.Areas.Admin.Models.TurkishProductExtensionAdminModel
+
+@{
+    var panelId = $"turkish-product-extension-{Model.ProductId}";
+}
+
+@*
+    Form alanları "TurkishProductExtension.X" prefix'iyle nopCommerce'in standart product edit form'una
+    katılır. Admin standart "Kaydet" butonuna bastığında ProductSavedConsumer (EntityUpdatedEvent<Product>
+    consumer) form'dan bu alanları okur, extension'ı upsert eder ve persisted recalc tetikler.
+    "— (pasif) —" seçilirse consumer extension'ı siler.
+*@
+<nop-card asp-name="turkish-product-extension" asp-icon="fas fa-lira-sign"
+          asp-title="@T("Plugins.Misc.TurkeyCore.Product.ExtensionTitle")"
+          asp-hide-block-attribute-name="HideTurkishProductExtensionBlock"
+          asp-hide="false">
+    <div id="@panelId">
+        <div class="alert alert-info">
+            @T("Plugins.Misc.TurkeyCore.Product.ExtensionHint")
+        </div>
+
+        <div class="form-group row">
+            <div class="col-md-3">
+                <label class="col-form-label">@T("Plugins.Misc.TurkeyCore.Product.BaseCurrency")</label>
+            </div>
+            <div class="col-md-9">
+                <select class="form-control" id="tpe-base-currency" name="TurkishProductExtension.BaseCurrencyId">
+                    @foreach (var item in Model.AvailableCurrencies)
+                    {
+                        if (item.Selected) { <option value="@item.Value" selected>@item.Text</option> }
+                        else { <option value="@item.Value">@item.Text</option> }
+                    }
+                </select>
+                <span class="form-text">@T("Plugins.Misc.TurkeyCore.Product.BaseCurrency.Hint")</span>
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <div class="col-md-3">
+                <label class="col-form-label">@T("Plugins.Misc.TurkeyCore.Product.BasePrice")</label>
+            </div>
+            <div class="col-md-9">
+                <input type="number" step="0.0001" class="form-control" id="tpe-base-price"
+                       name="TurkishProductExtension.BasePrice"
+                       value="@Model.BasePrice.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture)" />
+                @if (!string.IsNullOrEmpty(Model.RateInfo))
+                {
+                    <span class="form-text text-success" id="tpe-rate-info">@Model.RateInfo</span>
+                }
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <div class="col-md-3">
+                <label class="col-form-label">@T("Plugins.Misc.TurkeyCore.Product.BaseOldPrice")</label>
+            </div>
+            <div class="col-md-9">
+                <input type="number" step="0.0001" class="form-control" id="tpe-base-old-price"
+                       name="TurkishProductExtension.BaseOldPrice"
+                       value="@(Model.BaseOldPrice?.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture))" />
+            </div>
+        </div>
+
+        <div class="form-group row">
+            <div class="col-md-3">
+                <label class="col-form-label">@T("Plugins.Misc.TurkeyCore.Product.BaseProductCost")</label>
+            </div>
+            <div class="col-md-9">
+                <input type="number" step="0.0001" class="form-control" id="tpe-base-product-cost"
+                       name="TurkishProductExtension.BaseProductCost"
+                       value="@(Model.BaseProductCost?.ToString("0.####", System.Globalization.CultureInfo.InvariantCulture))" />
+            </div>
+        </div>
+    </div>
+</nop-card>
+
+<script>
+    (function () {
+        // Panel'i "Fiyatlar" kartının (id=product-price) HEMEN ALTINA taşı +
+        // standart Price/OldPrice/ProductCost alanlarını HER ZAMAN gizle (artık BasePrice tek doğru kaynak).
+        function tpeMoveAndHide() {
+            var fiyatlarCard = document.getElementById('product-price');
+            var ourCard = document.getElementById('@panelId') && document.getElementById('@panelId').closest('.card');
+            if (fiyatlarCard && ourCard && ourCard !== fiyatlarCard) {
+                if (fiyatlarCard.nextSibling !== ourCard) {
+                    fiyatlarCard.parentNode.insertBefore(ourCard, fiyatlarCard.nextSibling);
+                }
+            }
+            ['Price', 'OldPrice', 'ProductCost'].forEach(function (id) {
+                var inp = document.getElementById(id);
+                var fg = inp && inp.closest('.form-group');
+                if (fg) fg.style.display = 'none';
+            });
+        }
+        tpeMoveAndHide();
+    })();
+</script>

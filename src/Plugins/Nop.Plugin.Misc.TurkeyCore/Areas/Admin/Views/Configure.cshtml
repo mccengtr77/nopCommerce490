@@ -124,7 +124,9 @@
                 <div class="form-group row">
                     <div class="col-md-3"></div>
                     <div class="col-md-9">
-                        <button type="submit" name="refresh-rates" value="true" class="btn btn-info">
+                        @* formnovalidate: bu buton sadece TCMB feed'i çekmek için, formdaki diğer alanların required validation'ı bypass edilir.
+                           class="cancel": jQuery unobtrusive validation'ı bu buton için skip eder. *@
+                        <button type="submit" name="refresh-rates" value="true" class="btn btn-info cancel" formnovalidate>
                             <i class="fas fa-sync"></i> Şimdi Güncelle
                         </button>
                     </div>

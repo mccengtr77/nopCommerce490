@@ -56,6 +56,9 @@ public static class TurkeyCoreDefaults
 
         /// <summary>GİB e-fatura mükellef sorgu sonucu — {0} = VKN/TCKN</summary>
         public static CacheKey GibMukellef => new("Nop.Plugin.TurkeyCore.GibMukellef.{0}");
+
+        /// <summary>Ürün döviz extension kaydı — {0} = ProductId</summary>
+        public static CacheKey ProductExtensionByProductId => new("Nop.Plugin.TurkeyCore.ProductExtension.ByProductId.{0}");
     }
 
     /// <summary>

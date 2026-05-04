@@ -26,6 +26,12 @@ public class SchemaMigration : AutoReversingMigration
         Create.TableFor<TurkishCustomerExtension>();
         Create.TableFor<TurkishAddressExtension>();
 
+        // Product extension — ürün başına döviz bazlı fiyat
+        Create.TableFor<TurkishProductExtension>();
+
+        // Cart item price lock — sepete eklenince TL fiyat snapshot
+        Create.TableFor<TurkishCartItemPriceLock>();
+
         // TCMB döviz kuru log
         Create.TableFor<ExchangeRateLog>();
     }

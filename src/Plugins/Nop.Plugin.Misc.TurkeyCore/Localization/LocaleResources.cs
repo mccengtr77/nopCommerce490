@@ -102,7 +102,18 @@ public static class LocaleResources
         [$"{Prefix}.Admin.DataStatus.Empty"] = "Boş",
         [$"{Prefix}.Admin.DataStatus.Incomplete"] = "Eksik",
         [$"{Prefix}.Admin.DataStatus.NoLocationData"] =
-            "İlçe, mahalle veya vergi dairesi verisi henüz yüklenmemiş. Storefront cascading dropdown'larının çalışması için bu verileri admin import aracıyla veya elle eklemelisiniz."
+            "İlçe, mahalle veya vergi dairesi verisi henüz yüklenmemiş. Storefront cascading dropdown'larının çalışması için bu verileri admin import aracıyla veya elle eklemelisiniz.",
+
+        // Ürün — Döviz Bazlı Fiyat (admin product edit panel)
+        [$"{Prefix}.Product.ExtensionTitle"] = "Türkiye - Döviz Bazlı Fiyat",
+        [$"{Prefix}.Product.ExtensionHint"] =
+            "Ürün fiyatını seçtiğiniz para biriminde tanımlayın. Site primary currency'si seçilirse çevirme yok (raw fiyat); USD/EUR vb. seçilirse TCMB güncel kuruyla TRY'ye çevrilir ve sepete eklenince o anki kur lock'lanır.",
+        [$"{Prefix}.Product.BaseCurrency"] = "Para Birimi",
+        [$"{Prefix}.Product.BaseCurrency.Hint"] = "Ürün fiyatının saklandığı para birimi (TRY seçilirse çevirme yapılmaz).",
+        [$"{Prefix}.Product.BasePrice"] = "Fiyat (Döviz)",
+        [$"{Prefix}.Product.BaseOldPrice"] = "Eski Fiyat (Döviz)",
+        [$"{Prefix}.Product.BaseProductCost"] = "Maliyet (Döviz)",
+        [$"{Prefix}.Product.RateNotFound"] = "Bu para birimi için TCMB kuru bulunamadı — feed'i güncelleyin."
     };
 
     /// <summary>
@@ -141,6 +152,17 @@ public static class LocaleResources
 
         [$"{Prefix}.Kep.Address"] = "Registered E-Mail Address (KEP)",
         [$"{Prefix}.Corporate.Mersis"] = "MERSIS No",
-        [$"{Prefix}.Corporate.TicaretSicilNo"] = "Trade Registry No"
+        [$"{Prefix}.Corporate.TicaretSicilNo"] = "Trade Registry No",
+
+        // Product currency (admin)
+        [$"{Prefix}.Product.ExtensionTitle"] = "Turkey - Currency-based Price",
+        [$"{Prefix}.Product.ExtensionHint"] =
+            "Define the product price in the selected currency. Selecting the site primary currency means no conversion (raw price); USD/EUR etc. are converted to TRY using the latest TCMB rate, and the rate is locked when the item is added to the cart.",
+        [$"{Prefix}.Product.BaseCurrency"] = "Currency",
+        [$"{Prefix}.Product.BaseCurrency.Hint"] = "The currency in which the product price is stored (TRY = no conversion).",
+        [$"{Prefix}.Product.BasePrice"] = "Price (in currency)",
+        [$"{Prefix}.Product.BaseOldPrice"] = "Old price (in currency)",
+        [$"{Prefix}.Product.BaseProductCost"] = "Cost (in currency)",
+        [$"{Prefix}.Product.RateNotFound"] = "TCMB rate not available for this currency — refresh the feed."
     };
 }

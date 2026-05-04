@@ -1,0 +1,12 @@
+{
+  "Group": "Tax providers",
+  "FriendlyName": "Türkiye KDV - Türk Vergi Oranları",
+  "SystemName": "Tax.TurkishVat",
+  "Version": "1.0.0",
+  "SupportedVersions": [ "4.90" ],
+  "Author": "Mehmet ÇALIŞKAN",
+  "DisplayOrder": 1,
+  "FileName": "Nop.Plugin.Tax.TurkishVat.dll",
+  "Description": "Türkiye KDV (Katma Değer Vergisi) oranlarını uygulayan tax provider. Install sırasında üç standart kategori (%1, %10, %20) otomatik oluşturulur ve plugin aktif tax provider olarak ayarlanır. Oranlar admin tarafında düzenlenebilir; varsayılanlar 2026 KDV tarifesine uygundur.",
+  "DependsOnSystemNames": [ "Misc.TurkeyCore" ]
+}

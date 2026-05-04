@@ -2,6 +2,7 @@ using Microsoft.AspNetCore.Mvc;
 using Nop.Plugin.Misc.TurkeyCore.Domain;
 using Nop.Plugin.Misc.TurkeyCore.Services.Address;
 using Nop.Services.Directory;
+using Nop.Services.Security;
 using Nop.Web.Framework.Components;
 using Nop.Web.Models.Common;
 
@@ -12,19 +13,24 @@ namespace Nop.Plugin.Misc.TurkeyCore.Components.TurkishCustomerInvoice;
 /// koşullu görünen TCKN (bireysel) veya VKN+Vergi Dairesi (kurumsal) alanları.
 ///
 /// Country=Turkey değilse boş render eder. ViewComponent <see cref="AddressModel"/>'i
-/// <c>additionalData</c> olarak alır, edit modu için <see cref="TurkishAddressExtension"/>'dan
-/// önceki değerleri yükler (TCKN/VKN şifre çözülmez — masked gösterilir).
+/// <c>additionalData</c> olarak alır, edit modunda <see cref="TurkishAddressExtension"/>'daki
+/// şifreli TCKN/VKN değerlerini decrypt edip input'a yerleştirir — kullanıcı kendi datasını
+/// görmeyi hak ediyor (nopCommerce zaten address ownership kontrolü yapıyor: customer
+/// sadece kendi adresini editleyebiliyor).
 /// </summary>
 public class TurkishCustomerInvoiceViewComponent : NopViewComponent
 {
     protected readonly ICountryService _countryService;
+    protected readonly IEncryptionService _encryptionService;
     protected readonly ITurkishAddressService _turkishAddressService;
 
     public TurkishCustomerInvoiceViewComponent(
         ICountryService countryService,
+        IEncryptionService encryptionService,
         ITurkishAddressService turkishAddressService)
     {
         _countryService = countryService;
+        _encryptionService = encryptionService;
         _turkishAddressService = turkishAddressService;
     }
 
@@ -61,12 +67,34 @@ public class TurkishCustomerInvoiceViewComponent : NopViewComponent
             {
                 model.MusteriTipi = ext.MusteriTipi;
                 model.SelectedVergiDairesiId = ext.VergiDairesiId ?? 0;
-                model.HasExistingTcKimlikNo = !string.IsNullOrEmpty(ext.TcKimlikNo);
-                model.HasExistingVergiNo = !string.IsNullOrEmpty(ext.VergiNo);
+
+                // Edit modunda kullanıcı kendi adresini açıyor — şifreli değerleri decrypt
+                // edip input'ta plain göster. nopCommerce CustomerController.AddressEdit
+                // customer-address ownership kontrolü yapıyor.
+                model.ExistingTcKimlikNo = TryDecrypt(ext.TcKimlikNo);
+                model.ExistingVergiNo = TryDecrypt(ext.VergiNo);
             }
         }
 
         return View("~/Plugins/Misc.TurkeyCore/Components/TurkishCustomerInvoice/Default.cshtml", model);
+    }
+
+    /// <summary>
+    /// Şifreli değeri decrypt etmeye çalışır; başarısız olursa null döner (corrupt data,
+    /// encryption key değişikliği veya plain text legacy değer durumlarına karşı sessiz fallback).
+    /// </summary>
+    private string? TryDecrypt(string? encrypted)
+    {
+        if (string.IsNullOrEmpty(encrypted))
+            return null;
+        try
+        {
+            return _encryptionService.DecryptText(encrypted);
+        }
+        catch
+        {
+            return null;
+        }
     }
 }
 
@@ -77,8 +105,12 @@ public class TurkishCustomerInvoiceModel
     public bool InitiallyHidden { get; set; }
     public TurkishCustomerType MusteriTipi { get; set; } = TurkishCustomerType.Individual;
     public int SelectedVergiDairesiId { get; set; }
-    public bool HasExistingTcKimlikNo { get; set; }
-    public bool HasExistingVergiNo { get; set; }
+
+    /// <summary>Edit modunda decrypt edilmiş TCKN — input'a değer olarak yerleştirilir</summary>
+    public string? ExistingTcKimlikNo { get; set; }
+
+    /// <summary>Edit modunda decrypt edilmiş VKN/TCKN (kurumsal alan) — input'a değer olarak yerleştirilir</summary>
+    public string? ExistingVergiNo { get; set; }
 
     /// <summary>"tckn" | "vergi" | "all"</summary>
     public string Section { get; set; } = "all";

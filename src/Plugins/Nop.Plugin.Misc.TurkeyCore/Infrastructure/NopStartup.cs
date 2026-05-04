@@ -4,10 +4,12 @@ using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Nop.Core.Infrastructure;
 using Nop.Plugin.Misc.TurkeyCore.Services.Address;
+using Nop.Plugin.Misc.TurkeyCore.Services.CartLock;
 using Nop.Plugin.Misc.TurkeyCore.Services.Customer;
 using Nop.Plugin.Misc.TurkeyCore.Services.ExchangeRate;
 using Nop.Plugin.Misc.TurkeyCore.Services.GibLookup;
 using Nop.Plugin.Misc.TurkeyCore.Services.Location;
+using Nop.Plugin.Misc.TurkeyCore.Services.Product;
 using Nop.Plugin.Misc.TurkeyCore.Services.TaxOffice;
 using Nop.Plugin.Misc.TurkeyCore.Services.Validation;
 using Nop.Web.Framework.Infrastructure.Extensions;
@@ -34,6 +36,14 @@ public class NopStartup : INopStartup
         // Customer/Address köprü servisleri (encrypt/decrypt + extension lookup)
         services.AddScoped<ITurkishCustomerService, TurkishCustomerService>();
         services.AddScoped<ITurkishAddressService, TurkishAddressService>();
+
+        // Product extension — döviz bazlı ürün fiyatı (persisted recalc).
+        // Admin Save veya TCMB scheduled task → Product.Price/OldPrice/ProductCost DB'ye yazılır,
+        // nopCommerce'in tüm fiyat akışı (search, filter, discount, marketplace, tier price) tek doğru fiyatı görür.
+        services.AddScoped<ITurkishProductExtensionService, TurkishProductExtensionService>();
+
+        // Sepet kalemi fiyat snapshot — sepete eklenince TL kur lock'lanır
+        services.AddScoped<ITurkishCartItemPriceLockService, TurkishCartItemPriceLockService>();
 
         // TCMB döviz kuru — typed HttpClient ile (proxy desteği için WithProxy)
         services.AddHttpClient<ITcmbExchangeRateService, TcmbExchangeRateService>().WithProxy();
