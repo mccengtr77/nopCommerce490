@@ -570,6 +570,83 @@ Bug fix sonrası rebuild ile sorun devam ettiyse: `bin/`, `obj/`, ve `Plugins/Mi
 
 ---
 
+## Karar 23: Ürün Döviz Bazlı Fiyat — Persisted Recalc (Canlı Override Değil)
+
+**Tarih**: 2026-05-04
+**Karar**: Ürün başına döviz bazlı fiyat tanımı için **persisted recalc** yaklaşımı kullanılır: admin Save anında veya TCMB scheduled task tetiklendiğinde `Product.Price/OldPrice/ProductCost` alanları DB'ye yazılır. Storefront fiyat akışı (search, filter, discount, marketplace, tier price) tek doğru fiyatı (TRY cinsinden) görür.
+
+### Reddedilen Alternatif
+
+İlk denenen yaklaşım: `IPriceCalculationService` decorator ile `Product.Price`'ı runtime'da bellek-içi mutate etmek (canlı çevrim). Bu yaklaşım şu yan etkilerden ötürü **terk edildi**:
+
+- **Search/filter**: DB sorgusu raw `Product.Price` kullanır → bizim 3350 TL ürün yanlış banda düşer
+- **Sıralama**: "Fiyat artan" sorgusu raw değer üzerinden çalışır
+- **Search index** (Lucene): index raw değeri tutar, arama yanlış sıralama
+- **Tier prices, attribute combination**: Decorator `overriddenProductPrice != null` ise skip eder, tier/varyant fiyatları çevrilmez
+- **% indirim hesabı**: Discount engine raw değer üzerinden % uygular, beklenen TL bazlı indirim olmaz
+- **CacheProductPrices**: İlk render'da cache'lenir, kur değişse bile güncellenmez
+- **Marketplace plugin'leri** (Faz 3 Trendyol/Hepsiburada): API'lara raw değer push edilir → pazaryeri yanlış fiyat görür
+- **Bulk update**: `UPDATE Product SET Price = Price * 1.1` çalışırsa extension etkilenmez
+
+### Persisted Recalc Trade-off
+
+- Kur değişikliği storefront'a anlık yansımaz; günlük TCMB scheduled task ile yansır (admin manuel "Şimdi Güncelle" + recalc çalıştırabilir)
+- Sepete eklenince `TurkishCartItemPriceLock` snapshot'ı zaten kur lock'lar — kullanıcı için tutarlı
+
+### Tetiklendiği Yerler
+
+- `ProductSavedConsumer` (admin Save): `EntityInsertedEvent<Product>` + `EntityUpdatedEvent<Product>` → form'dan oku → upsert + `RecalculateAndPersistAsync`
+- `ExchangeRateBackgroundTask` (scheduled): TCMB feed çekildikten sonra `RecalculateAllAsync` ile tüm extension'lı ürünler recalc
+
+### Plugin Türkiye-Spesifik Varsayım
+
+`GetEffectiveRateAsync` "TRY"/"TL" identity (1.0) döndürür; başka primary'lerde TCMB rate (TRY karşılığı) kullanılır. Plugin **PrimaryStoreCurrency = TRY** varsayar — site primary'si TRY olmalı (Configuration → Currencies → Türk Lirası "Birincil mağaza para birimi olarak işaretle"). USD/EUR primary'de hesap bozulur.
+
+---
+
+## Karar 24: Form-Integrated Save (Ayrı AJAX Endpoint Değil)
+
+**Tarih**: 2026-05-04
+**Karar**: Admin product edit panelinin alanları (`BaseCurrencyId`, `BasePrice`, vb.) `TurkishProductExtension.X` prefix'iyle nopCommerce'in **standart product form'una** katılır. Admin "Kaydet" basınca, `EntityInsertedEvent<Product>`/`EntityUpdatedEvent<Product>` consumer'ı (`ProductSavedConsumer`) form'dan okur ve extension'ı upsert + recalc eder.
+
+### Reddedilen Alternatifler
+
+- **Ayrı AJAX endpoint** (`POST /Admin/TurkishProductExtensionAdmin/Save`): Admin için iki "Kaydet" butonu UX karmaşası yaratıyor
+- **JavaScript ile standart Kaydet butonuna hook**: Hacky, framework-friendly değil
+
+### Pattern Referansı
+
+Mevcut `AddressLocationConsumer` aynı pattern'i kullanıyor — adres formundan İl/İlçe/Mahalle alanlarını okuyup `TurkishAddressExtension`'a senkronize eder. Bu yaklaşım nopCommerce konvansiyonuyla uyumlu.
+
+### Loop Koruması
+
+`RecalculateAndPersistAsync` `_productService.UpdateProductAsync` çağırır → `EntityUpdatedEvent<Product>` tekrar publish edilir → consumer tekrar form'dan okur → sonsuz loop. `HttpContext.Items["TurkeyCore.ProductSavedConsumer.Processing"]` flag'i ile loop önlenir; recalc çağrısı flag set, sonra remove.
+
+### "Pasif" Seçeneği Kaldırıldı
+
+Dropdown'da "— (pasif) —" yoktur. Default seçili currency = `CurrencySettings.PrimaryStoreCurrencyId`. Admin primary'i seçerse "döviz çevirmeyen extension" olur (TRY identity, recalc no-op). Bu basitleştirme: her ürün için her zaman bir extension vardır, varlık/yokluk kararı kalkar.
+
+---
+
+## Karar 25: WidgetSettings Self-Healing Consumer
+
+**Tarih**: 2026-05-04
+**Karar**: Plugin lifecycle hook'larına (`InstallAsync`/`UpdateAsync`) ek olarak, `IConsumer<AppStartedEvent>` (`WidgetSettingsRepairConsumer`) her app startup'ta `WidgetSettings.ActiveWidgetSystemNames` listesinde plugin systemName'inin varlığını kontrol eder, yoksa otomatik ekler.
+
+### Bağlam
+
+İlk install'da `IWidgetPlugin` arayüzü plugin'e eklendikten sonra, mevcut install için `UpdateAsync` çağrılır ve widget settings'i güncellemesi beklenir. Ancak fiili gözlem: bu güncelleme bir nedenle **sessizce fail oldu** (logs incelenmeden kesin neden bilinmiyor). Sonuç: storefront widget zone'ları çalışmıyor, badge görünmüyor.
+
+### Çözüm
+
+Defensive consumer: her startup'ta tek satırlık check, listede yoksa ekle + log. Yan etkisiz; varsa no-op. Bu pattern, plugin runtime'ında kritik invariant'ı (widget aktivasyonu) garantiler.
+
+### Genelleştirilebilir Kural
+
+Plugin'in çalışması için DB'de bulunması zorunlu state (settings, schedule task'lar, vb.) için sadece `InstallAsync`/`UpdateAsync`'a güvenilmemeli. Defensive `AppStartedEvent` consumer'ı ile self-healing yapılması daha güvenilir. Trade-off: küçük startup overhead, ama plugin update senaryolarında robustness sağlar.
+
+---
+
 ## Açık Sorular ve Bekleyen Kararlar
 
 ### A1. Author / Şirket Adı

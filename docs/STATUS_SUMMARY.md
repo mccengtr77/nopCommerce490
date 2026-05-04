@@ -1,8 +1,8 @@
 # Proje Durum Özeti
 
-**Son güncelleme**: 2026-05-03
-**Faz**: 1 (Yasal Temel) — yasal-kritik bölüm büyük ölçüde tamam
-**Deployment**: ✅ İlk başarılı uçtan uca deployment (2026-05-03, macOS + VM SQL Server 2019)
+**Son güncelleme**: 2026-05-04
+**Faz**: 1 (Yasal Temel) — yasal-kritik bölüm büyük ölçüde tamam + döviz bazlı ürün fiyatı eklendi
+**Deployment**: ✅ Uçtan uca çalışıyor (macOS + VM SQL Server 2019, plugin 1.0.11 aktif)
 
 ---
 
@@ -11,11 +11,12 @@
 | Metrik | Değer |
 |---|---|
 | Toplam plugin | 2 (TurkeyCore + TurkishConsumerLaw) |
-| Toplam kod | ~11.100 satır plugin + ~2.600 satır test |
-| Toplam test | **319 test, %100 geçer** (TurkeyCore 206 + ConsumerLaw 113) |
+| Toplam kod | ~12.500 satır plugin + ~2.900 satır test |
+| Toplam test | **346 test, %100 geçer** (TurkeyCore 233 + ConsumerLaw 113) |
 | Build durumu | ✅ Temiz, 0 hata |
-| Runtime durumu | ✅ nopCommerce 4.90.4'e install edildi, tüm migration'lar başarılı |
+| Runtime durumu | ✅ nopCommerce 4.90.4'e install edildi, döviz bazlı fiyat dahil tüm feature'lar canlı |
 | Yasal-kritik modül | 11/12 uçtan uca (sadece İYS API ve PDF üretimi yok) |
+| Döviz bazlı ürün fiyatı | ✅ Persisted recalc + sepet kur lock + storefront badge (Pavilion) |
 
 ### İlk Deployment Doğrulaması (2026-05-03)
 
@@ -39,8 +40,8 @@
 | Kapsam | Durum |
 |---|:-:|
 | Plugin iskeleti (plugin.json, Plugin.cs, Defaults, Settings, NopStartup) | ✅ |
-| Domain (7 entity + enum) + 7 mapping builder | ✅ |
-| Schema migration + 81 il seed | ✅ |
+| Domain (9 entity + enum) + 9 mapping builder | ✅ |
+| Schema migration + 81 il seed + incremental migration'lar | ✅ |
 | TCKN/VKN/IBAN/GSM validasyon servisi (95 test) | ✅ |
 | Lokasyon servisi (il/ilçe/mahalle, cache'li) | ✅ |
 | TaxOffice servisi | ✅ |
@@ -50,8 +51,14 @@
 | AJAX API (5 endpoint: provinces/districts/neighborhoods/validate-tckn/validate-vkn) | ✅ |
 | Admin Configure (4 kart) | ✅ |
 | Storefront ViewComponent'leri (cascading dropdown + customer type) | ✅ |
-| Lokalizasyon (TR ~80 + EN kritik) | ✅ |
-| **Test sayısı** | **206** |
+| **Döviz bazlı ürün fiyatı** (USD/EUR/vb.) — persisted recalc + sepet kur lock + storefront badge | ✅ |
+|  ↳ `TurkishProductExtension` entity + admin product widget (form-integrated Save, "pasif" yok) | ✅ |
+|  ↳ `TurkishCartItemPriceLock` entity + 3 consumer (insert/delete/UnitPrice event) | ✅ |
+|  ↳ `ProductSavedConsumer` (loop koruması ile) + `ExchangeRateBackgroundTask` recalc hook | ✅ |
+|  ↳ Storefront badge (Pavilion `ProductPriceBottom` + `ProductBoxAddinfoMiddle`) | ✅ |
+|  ↳ `WidgetSettingsRepairConsumer` (self-healing — `AppStartedEvent`) | ✅ |
+| Lokalizasyon (TR ~95 + EN kritik) | ✅ |
+| **Test sayısı** | **233** |
 | ❌ İlçe/mahalle/vergi dairesi seed (CSV import aracı bekliyor) | — |
 | ❌ KDV Tax Provider | — |
 | ❌ Türkçe currency formatter | — |
@@ -121,9 +128,9 @@ Tüm yol haritası: [`PLUGIN_ROADMAP.md`](PLUGIN_ROADMAP.md)
 
 ## Karar Kayıtları
 
-22 stratejik/teknik karar belgelenmiş — [`PROJECT_DECISIONS.md`](PROJECT_DECISIONS.md)
+25 stratejik/teknik karar belgelenmiş — [`PROJECT_DECISIONS.md`](PROJECT_DECISIONS.md)
 
-Son eklenenler (Karar 11–22):
+Son eklenenler (Karar 11–25):
 - Karar 11: TCMB XML parser saf statik fonksiyon
 - Karar 12: Lokalizasyon static dictionary, tr-TR.xml yok
 - Karar 13: Test setup'ta `Singleton<AppSettings>` init
@@ -134,8 +141,11 @@ Son eklenenler (Karar 11–22):
 - Karar 18: Withdrawal state machine pure static function
 - Karar 19: PDF yerine HTML (geçici, QuestPDF Faz 1B'de)
 - Karar 20: Bilinmeyen token leave-as-is
-- **Karar 21**: Multi-cascade FK yerine soft-FK (Indexed) — `TurkishAddressExtension`'da Province/District/Neighborhood referansları SQL Server "multiple cascade paths" hatasını önlemek için sadece `.Indexed()`
-- **Karar 22**: Plugin enum kolonları için **explicit `.AsInt32()`** zorunlu — nopCommerce'in `Create.TableFor<T>()` enum property'lerini plugin assembly'lerinde otomatik üretmiyor; tüm `NopEntityBuilder<T>` builder'larında enum'lar açıkça tanımlanmalı
+- Karar 21: Multi-cascade FK yerine soft-FK (Indexed) — `TurkishAddressExtension` referansları için
+- Karar 22: Plugin enum kolonları için explicit `.AsInt32()` zorunlu
+- **Karar 23**: Ürün döviz bazlı fiyat — **persisted recalc** (canlı override değil). `IPriceCalculationService` decorator yan etkilerinden (search/filter/discount/marketplace çakışması) ötürü reddedildi; admin Save + TCMB scheduled task `Product.Price`'ı DB'ye yazar
+- **Karar 24**: Form-integrated Save — admin product panelinin alanları nopCommerce standart product form'una `TurkishProductExtension.X` prefix'iyle katılır, `ProductSavedConsumer` `EntityInsertedEvent`/`EntityUpdatedEvent` ile yakalar (loop koruması: `HttpContext.Items` flag). Ayrı AJEX endpoint + ekstra "Kaydet" butonu yerine
+- **Karar 25**: WidgetSettings self-healing consumer — `IConsumer<AppStartedEvent>` (`WidgetSettingsRepairConsumer`) her startup'ta `ActiveWidgetSystemNames`'da plugin systemName'i kontrol eder, yoksa otomatik ekler. `InstallAsync`/`UpdateAsync` sessizce fail ederse plugin widget zone'ları çalışmaz; defensive check robustness sağlar
 
 ---
 

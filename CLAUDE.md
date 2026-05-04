@@ -55,7 +55,7 @@ nopCommerce/                                    # Fork kökü
 │   │   ├── Nop.Plugin.Payments.PayTR/          # FAZ 2 (planlandı)
 │   │   └── ...                                  # Yol haritasına bakın
 │   ├── Tests/
-│   │   ├── Nop.Plugin.Misc.TurkeyCore.Tests/           # 188 test
+│   │   ├── Nop.Plugin.Misc.TurkeyCore.Tests/           # 233 test
 │   │   └── Nop.Plugin.Misc.TurkishConsumerLaw.Tests/   # 113 test
 │   └── ... (nopCommerce kendi kodu)
 ```
@@ -64,24 +64,39 @@ nopCommerce/                                    # Fork kökü
 
 ## Aktif Geliştirme Önceliği
 
-**FAZ 1 (Şu an): Yasal Temel — ✅ İlk uçtan uca deployment başarılı (2026-05-03, macOS + VM SQL Server 2019)**
+**FAZ 1 (Şu an): Yasal Temel — ✅ Uçtan uca canlı (macOS + VM SQL Server 2019, plugin v1.0.11 — 2026-05-04)**
 
-1. **`Nop.Plugin.Misc.TurkeyCore`** — ✅ **install edildi, MVP altyapısı + köprü servisleri tamam**
+1. **`Nop.Plugin.Misc.TurkeyCore`** — ✅ **install edildi, MVP altyapısı + köprü servisleri + döviz bazlı ürün fiyatı tamam**
    - Spec: `docs/01-TurkeyCore-Prompt.md`
-   - **Fiili ilerleme**: `docs/03-TurkeyCore-Progress.md` (206 test geçer)
-   - Sıradaki Faz 1B: ilçe/mahalle/vergi dairesi seed import aracı, FluentValidation
+   - **Fiili ilerleme**: `docs/03-TurkeyCore-Progress.md` (233 test geçer, ~3.700 satır)
+   - **Tamamlananlar**: TCKN/VKN/IBAN/GSM validasyon, 81 il seed, TCMB kur servisi, Customer/Address extension, GİB mock, **döviz bazlı ürün fiyatı** (USD/EUR vb. ürün başına — persisted recalc + sepet kur lock + storefront badge)
+   - Sıradaki Faz 1B: ilçe/mahalle/vergi dairesi CSV seed, KDV Tax Provider, Türkçe currency formatter, FluentValidation
 2. **`Nop.Plugin.Misc.TurkishConsumerLaw`** — ✅ **install edildi, 6/9 modül uçtan uca tamam**
    - Spec: `docs/02-TurkishConsumerLaw-Prompt.md`
    - **Fiili ilerleme**: `docs/04-TurkishConsumerLaw-Progress.md` (113 test geçer, ~8.300 satır)
    - **Tamamlananlar**: ETBİS, Çerez Consent, KVKK Aydınlatma+Rıza+Audit, KVKK m.11 Başvuru, Withdrawal (cayma), Contracts (MSS+ÖBF)
    - **Kalan**: İYS API, Warranty, Complaints, MyConsentsList, PDF üretimi (QuestPDF), retention auto-purge
 
-**Toplam test durumu**: 319 test geçer (TurkeyCore 206 + ConsumerLaw 113)
+**Toplam test durumu**: 346 test geçer (TurkeyCore 233 + ConsumerLaw 113)
+
+### Ürün Döviz Bazlı Fiyat — Mimari Notları (Karar 23–25)
+
+İthalatçı/elektronik bayi senaryosu için. Tasarım:
+
+- **Persisted recalc** (Karar 23): `IPriceCalculationService` decorator yerine; admin Save + TCMB scheduled task `Product.Price`'ı **DB'ye yazar**. Search/filter/discount/marketplace tek doğru fiyatı görür.
+- **Form-integrated Save** (Karar 24): `TurkishProductExtension.X` prefix'i ile alanlar standart product form'una katılır; `ProductSavedConsumer` (`EntityInsertedEvent` + `EntityUpdatedEvent`) yakalar ve `HttpContext.Items` flag'i ile loop koruması yapar
+- **Sepet kur lock**: `TurkishCartItemPriceLock` snapshot + `GetShoppingCartItemUnitPriceEvent` consumer (`StopProcessing=true`)
+- **Storefront badge** (Pavilion): `ProductPriceBottom` + `ProductBoxAddinfoMiddle` zone'larına hook
+- **Self-healing** (Karar 25): `WidgetSettingsRepairConsumer` (`AppStartedEvent`) plugin systemName'i `ActiveWidgetSystemNames`'da yoksa otomatik ekler — `InstallAsync`/`UpdateAsync` sessizce fail ettiyse kurtarır
+
+**Varsayım**: Plugin Türkiye-spesifik. **PrimaryStoreCurrency = TRY** olmalı (Configuration → Currencies → "Türk Lirası → Birincil mağaza para birimi olarak işaretle"). USD/EUR primary'de hesap bozulur.
 
 **Deployment notları (ilk install'da öğrenilenler — çok önemli)**:
 - nopCommerce 4.90'da connection string `App_Data/appsettings.json` → `ConnectionStrings.ConnectionString` (eski `dataSettings.json` yok). Setup wizard'ı tetiklemek için bu değeri boş yap.
 - Plugin entity'sindeki **enum property'leri** için `NopEntityBuilder<T>` builder'da **mutlaka explicit** `.WithColumn(nameof(X)).AsInt32().NotNullable()` ekle — `Create.TableFor<T>()` plugin assembly'sindeki enum'ları otomatik üretmiyor (bkz. PROJECT_DECISIONS Karar 22)
 - Cascade riski olan FK'lar için (master-detail-detail zinciri) `.ForeignKey<T>()` yerine `.Indexed()` kullan (bkz. Karar 21)
+- **Plugin update için `plugin.json` Version artırılmalı**: nopCommerce `UpdatePluginsAsync` sadece version değişikliğinde migration + `UpdateAsync` çalıştırır. Yeni feature için version artırma şart.
+- **Widget plugin install kontrolü**: `IWidgetPlugin` arayüzü mevcut bir plugin'e sonradan eklendiyse, install zaten gerçekleşmiş olduğu için `InstallAsync` çalışmaz; `UpdateAsync`'e güvenmek de riskli (bizim case'imizde sessiz fail). `WidgetSettingsRepairConsumer` (Karar 25) bu durumu kurtarır.
 - Plugin DLL stale olursa: `bin/`, `obj/`, `Presentation/Nop.Web/Plugins/Misc.*` klasörlerini sil + DB drop + setup wizard tekrar
 - VM'deki SQL Server'a Mac'ten bağlanmak için TCP/IP registry üzerinden enable edilmeli (`MSSQL15.<instance>\MSSQLServer\SuperSocketNetLib\Tcp\IPAll` → `TcpPort=1433`, `TcpDynamicPorts=""`)
 

@@ -2,9 +2,9 @@
 
 Bu dosya `Nop.Plugin.Misc.TurkeyCore` plugin'inin **fiili durumunu** belgeler. Spec için `01-TurkeyCore-Prompt.md` dosyasına bak; bu dosya neyin **gerçekten yapıldığını** anlatır.
 
-**Son güncelleme**: 2026-05-03
-**Durum**: ✅ İlk uçtan uca deployment başarılı (macOS + VM SQL Server 2019) — MVP altyapısı tamam, seed verisi ve event consumer'lar bekliyor
-**Kod metriği**: ~2.800 satır plugin kodu + ~1.100 satır test (**206 test**, %100 geçer)
+**Son güncelleme**: 2026-05-04
+**Durum**: ✅ Uçtan uca canlı (macOS + VM SQL Server 2019, plugin v1.0.11) — MVP altyapısı + döviz bazlı ürün fiyatı uçtan uca tamam
+**Kod metriği**: ~3.700 satır plugin kodu + ~1.400 satır test (**233 test**, %100 geçer)
 
 ### Deployment Düzeltmeleri (2026-05-03)
 
@@ -72,7 +72,63 @@ Düzeltme sonrası: 7 tablo + 81 il seed sorunsuz oluşturuluyor.
 ### Test Altyapısı
 - `Tests/Nop.Plugin.Misc.TurkeyCore.Tests/` — NUnit + Moq + FluentAssertions
 - `AssemblySetup.cs` — `Singleton<AppSettings>` init (CacheKey ctor'unun NRE atmasını önler)
-- 152 test, hepsi geçer
+- 233 test, hepsi geçer
+
+---
+
+## Yapılanlar (Faz 1B — Ürün Döviz Bazlı Fiyat, v1.0.11 — 2026-05-04)
+
+İthalatçı/elektronik bayi senaryosu için "ürün başına farklı döviz" desteği. Tasarım kararı için bkz. [PROJECT_DECISIONS.md Karar 23–25](PROJECT_DECISIONS.md).
+
+### Domain & Migration (2 yeni entity)
+- `TurkishProductExtension` — `ProductId` FK + `BaseCurrencyId` (soft FK to Currency) + `BasePrice` + `BaseOldPrice?` + `BaseProductCost?`
+- `TurkishCartItemPriceLock` — `ShoppingCartItemId` FK + `LockedUnitPrice` + `LockedRate` + `BaseCurrencyCode` + `LockedAtUtc`
+- 2 yeni mapping builder + `SchemaMigration` güncellemesi + 2 incremental migration (idempotent)
+
+### Servisler
+
+| Servis | Yetenek |
+|---|---|
+| `ITurkishProductExtensionService` | CRUD + cache + `RecalculateAndPersistAsync` (tek ürün) + `RecalculateAllAsync` (toplu, scheduled task tarafından) + `ConvertBasePriceToTryAsync` (admin display) + `GetForeignBasePriceAsync` (storefront badge) |
+| `ITurkishCartItemPriceLockService` | Cart item snapshot CRUD |
+
+**Persisted recalc** yaklaşımı (Karar 23): `Product.Price/OldPrice/ProductCost` admin Save anında veya TCMB scheduled task'ta DB'ye yazılır. Search/filter/discount/marketplace tek doğru fiyatı görür. Plugin **PrimaryStoreCurrency = TRY** varsayar.
+
+### Event Consumer'lar (3 yeni)
+
+- **`ProductSavedConsumer`** (`EntityInsertedEvent<Product>` + `EntityUpdatedEvent<Product>`) — admin form'undan `TurkishProductExtension.X` alanlarını oku → upsert + recalc. `HttpContext.Items` flag ile loop koruması (recalc kendi event'ini tetikler).
+- **`CartItemPriceLockConsumer`** (`EntityInsertedEvent<ShoppingCartItem>` + `EntityDeletedEvent<ShoppingCartItem>` + `GetShoppingCartItemUnitPriceEvent`) — sepete eklenince TL kur lock'lanır, `StopProcessing=true` ile lock'lı fiyat döner.
+- **`WidgetSettingsRepairConsumer`** (`AppStartedEvent`) — defensive self-healing, `WidgetSettings.ActiveWidgetSystemNames`'da systemName yoksa otomatik ekler (Karar 25).
+
+### TCMB Scheduled Task — Recalc Hook
+`ExchangeRateBackgroundTask.ExecuteAsync` TCMB feed çektikten sonra `RecalculateAllAsync` çağırır → tüm extension'lı ürünler yeni kurla persistlenir.
+
+### Admin UI (Widget Zone Pattern, Form-Integrated Save — Karar 24)
+
+- `TurkishProductExtensionAdminViewComponent` — `AdminWidgetZones.ProductDetailsBlock` zone'una hook
+- `Default.cshtml` — currency dropdown ("pasif" yok, default = primary store currency) + 3 fiyat input + canlı TRY ön gösterimi (`≈ X ₺`)
+- JavaScript ile panel "Fiyatlar" kartının (`#product-price`) hemen altına taşınır + standart `Price/OldPrice/ProductCost` alanları gizlenir (admin tek "Kaydet" butonu yeterli — ayrı save endpoint yok)
+- Yeni ürün create sayfasında da panel görünür; form post sonrası `EntityInsertedEvent` consumer extension'ı insert eder
+
+### Storefront UI (Pavilion Tema Uyumlu)
+
+- `ProductBaseCurrencyBadgeViewComponent` — iki public widget zone'a hook:
+  - `PublicWidgetZones.ProductPriceBottom` — ürün detay sayfasında fiyatın altı (Pavilion `ProductTemplate.Simple.cshtml`)
+  - `PublicWidgetZones.ProductBoxAddinfoMiddle` — kategori/listeleme product box'ı (Pavilion `_ProductBox.cshtml`)
+- Badge görünür: ürünün `BaseCurrencyId != PrimaryStoreCurrencyId` (yani TRY dışı) ise `🌐 ≈ $300.00` pill-shaped, gri arka plan, tooltip "TCMB güncel kuruyla TRY'ye çevrilmiştir"
+- Primary currency ile aynıysa hiç gösterilmez (kullanıcı zaten o fiyatı görüyor)
+
+### IWidgetPlugin Entegrasyonu
+`TurkeyCorePlugin` `IMiscPlugin` + `IWidgetPlugin` ikisini de implement eder. `GetWidgetZonesAsync` 3 zone döndürür: 1 admin (`ProductDetailsBlock`) + 2 public (`ProductPriceBottom`, `ProductBoxAddinfoMiddle`). `HideInWidgetList = true` (admin widget listesinde gizli, ana plugin listesinde görünür).
+
+### Test (yeni 27 test)
+`TurkishProductExtensionServiceTests` — 23 test (CRUD, recalc happy path + edge case'ler, RecalculateAllAsync hata izolasyonu, ConvertBasePriceToTryAsync). Plus 4 dolaylı test güncellemesi.
+
+### Production Doğrulaması (2026-05-04)
+- Test ürünü USD seçildi, BasePrice 300 → recalc çalıştı, `Product.Price = 13.515,06 TL` (1 USD = ~45 TL) DB'ye yazıldı
+- Storefront `/test` sayfasında: `₺13.515,06` altında `≈ $300.00` badge görünür
+- PrimaryStoreCurrency TRY'a alındı (Currencies sayfasından "Türk Lirası → Birincil mağaza para birimi olarak işaretle")
+- WidgetSettings'te `Misc.TurkeyCore` ilk update'te eklenmedi (sebep belirsiz, sessiz fail) → SQL ile manuel eklendi → sonradan `WidgetSettingsRepairConsumer` ile self-healing yapıldı (gelecekteki kurulumlarda gerekmeyecek)
 
 ---
 
