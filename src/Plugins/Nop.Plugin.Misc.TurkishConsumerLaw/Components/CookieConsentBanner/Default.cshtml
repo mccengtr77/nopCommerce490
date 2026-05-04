@@ -116,6 +116,9 @@
     .tcl-cc-bottom { bottom: 0; top: 0; display: flex; align-items: flex-end; }
     .tcl-cc-top    { top: 0; bottom: 0; display: flex; align-items: flex-start; }
 
+    /* hidden attribute display:flex'i ezsin */
+    .tcl-cookie-consent[hidden] { display: none !important; }
+
     @@keyframes tcl-cc-fade-in {
         from { opacity: 0; }
         to   { opacity: 1; }

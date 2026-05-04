@@ -48,7 +48,9 @@ public class TurkeyCoreApiController : ControllerBase
     public async Task<IActionResult> GetProvinces()
     {
         var provinces = await _locationService.GetAllProvincesAsync();
-        var result = provinces.Select(p => new ProvinceListItemModel(p.Id, p.Name, p.PlateCode)).ToArray();
+        // Anonymous obj kullan — nopCommerce'in JSON serializer default'u PascalCase'i koruyor;
+        // storefront JS camelCase bekliyor. Anonymous obj'un property adları lowercase tanımlanır.
+        var result = provinces.Select(p => new { id = p.Id, name = p.Name, plateCode = p.PlateCode }).ToArray();
         return Ok(result);
     }
 
@@ -59,7 +61,7 @@ public class TurkeyCoreApiController : ControllerBase
     public async Task<IActionResult> GetDistricts(int provinceId)
     {
         var districts = await _locationService.GetDistrictsByProvinceIdAsync(provinceId);
-        var result = districts.Select(d => new DistrictListItemModel(d.Id, d.Name)).ToArray();
+        var result = districts.Select(d => new { id = d.Id, name = d.Name }).ToArray();
         return Ok(result);
     }
 
@@ -71,7 +73,7 @@ public class TurkeyCoreApiController : ControllerBase
     {
         var neighborhoods = await _locationService.GetNeighborhoodsByDistrictIdAsync(districtId);
         var result = neighborhoods
-            .Select(n => new NeighborhoodListItemModel(n.Id, n.Name, n.PostalCode))
+            .Select(n => new { id = n.Id, name = n.Name, postalCode = n.PostalCode })
             .ToArray();
         return Ok(result);
     }

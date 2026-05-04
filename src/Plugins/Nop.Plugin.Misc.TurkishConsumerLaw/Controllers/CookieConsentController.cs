@@ -106,7 +106,9 @@ public class CookieConsentController : ControllerBase
             new CookieOptions
             {
                 Expires = DateTimeOffset.UtcNow.AddDays(TurkishConsumerLawDefaults.Cookies.ConsentCookieDays),
-                HttpOnly = true,
+                // HttpOnly=false: storefront JS banner'ı tekrar göstermemek için bu cookie'yi
+                // okumak zorunda. Cookie sadece consent GUID içeriyor, hassas veri değil.
+                HttpOnly = false,
                 Secure = Request.IsHttps,
                 SameSite = SameSiteMode.Lax,
                 IsEssential = true  // Necessary kategoride — consent gerekmez

@@ -116,24 +116,80 @@
             form.classList.add('tc-customer-type-' + type);
         }
 
-        // Form submit: Kurumsal'da First/Last boşsa Company'den doldur (server validation için)
+        // Form submit guard: Türkiye için native zorunlu alanları (City, Zip, StateProvinceId)
+        // garantili doldur — TurkishProvince/District/Neighborhood seçilmişse onlardan türet,
+        // değilse "-" gibi placeholder ile validation'ı geçir. Submit hook capture phase'de fire eder
+        // ki nopCommerce'in client-side validate'i tetiklenmeden önce alanlar dolu olsun.
         form.addEventListener('submit', function () {
             if (!isTurkey()) return;
-            if (getSelectedType() !== 'corporate') return;
-            if (!companyInput) return;
 
-            var company = (companyInput.value || '').trim();
-            if (!company) return;
-
-            if (firstNameInput && !firstNameInput.value.trim()) {
-                // Şirket ismini ad/soyad olarak böl: ilk kelime ad, geri kalan soyad
-                var parts = company.split(/\s+/);
-                firstNameInput.value = parts[0] || company;
-                if (lastNameInput && !lastNameInput.value.trim()) {
-                    lastNameInput.value = parts.slice(1).join(' ') || '-';
+            // 1) Kurumsal'da First/Last → Company'den doldur (Bireysel'de zaten kullanıcı dolduruyor)
+            if (getSelectedType() === 'corporate' && companyInput) {
+                var company = (companyInput.value || '').trim();
+                if (company) {
+                    if (firstNameInput && !firstNameInput.value.trim()) {
+                        var parts = company.split(/\s+/);
+                        firstNameInput.value = parts[0] || company;
+                        if (lastNameInput && !lastNameInput.value.trim()) {
+                            lastNameInput.value = parts.slice(1).join(' ') || '-';
+                        }
+                    } else if (lastNameInput && !lastNameInput.value.trim()) {
+                        lastNameInput.value = '-';
+                    }
                 }
-            } else if (lastNameInput && !lastNameInput.value.trim()) {
-                lastNameInput.value = '-';
+            }
+
+            // 2) Native City/Zip/StateProvinceId — gizli ama nopCommerce required olabilir.
+            //    Türkiye cascading'inden değer türet, yoksa "-" koy.
+            var provinceSelect = form.querySelector('[id$="ProvinceId"][name$="ProvinceId"]:not([id*="State"])');
+            var districtSelect = form.querySelector('[id$="DistrictId"]');
+            var neighborhoodSelect = form.querySelector('[id$="NeighborhoodId"]');
+            var nativeCity = form.querySelector('[id$="City"]:not([id*="Province"]):not([id*="District"]):not([id*="Neighborhood"])');
+            var nativeZip = form.querySelector('[id$="ZipPostalCode"]');
+            var nativeState = form.querySelector('[id$="StateProvinceId"]');
+
+            function getSelectedText(sel) {
+                if (!sel || sel.selectedIndex < 0) return '';
+                var opt = sel.options[sel.selectedIndex];
+                return opt ? opt.text.replace(/\s*\(\d+\)\s*$/, '').trim() : '';
+            }
+
+            if (nativeCity && !nativeCity.value.trim()) {
+                var districtName = getSelectedText(districtSelect);
+                var provinceName = getSelectedText(provinceSelect);
+                nativeCity.value = districtName || provinceName || '-';
+            }
+
+            if (nativeZip && !nativeZip.value.trim() && neighborhoodSelect) {
+                var nOpt = neighborhoodSelect.options[neighborhoodSelect.selectedIndex];
+                var postal = nOpt ? (nOpt.dataset.postal || '') : '';
+                if (!postal && nOpt) {
+                    // Posta kodu option text'inden ekstrakt et: "Levent (34330)"
+                    var m = nOpt.text.match(/\((\d{5})\)/);
+                    if (m) postal = m[1];
+                }
+                if (postal) nativeZip.value = postal;
+                else nativeZip.value = '00000';
+            }
+
+            // StateProvinceId: TurkishProvince adıyla eşleşen native state'i seç.
+            // Eşleşme bulunamazsa boş bırak (nopCommerce controller'ı 0/null'a çeviriyor).
+            // ÖNEMLİ: "ilk geçerli" seçmek yanlış çünkü alfabetik sıralı listede "Adana" olur.
+            if (nativeState && (!nativeState.value || nativeState.value === '0')) {
+                var provinceName = getSelectedText(provinceSelect);
+                if (provinceName) {
+                    var lowerName = provinceName.toLocaleLowerCase('tr-TR');
+                    for (var i = 0; i < nativeState.options.length; i++) {
+                        var opt = nativeState.options[i];
+                        if (!opt.value || opt.value === '0') continue;
+                        if (opt.text.toLocaleLowerCase('tr-TR').trim() === lowerName) {
+                            nativeState.value = opt.value;
+                            break;
+                        }
+                    }
+                }
+                // Hâlâ boşsa: native state list yoktur veya eşleşme yoktur. 0 bırak;
+                // server `if (address.StateProvinceId == 0) address.StateProvinceId = null` yapar.
             }
         }, true);
 
